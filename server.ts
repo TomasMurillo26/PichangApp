@@ -7,6 +7,16 @@ import communeRoutes  from './src/routes/communes';
 import friendrequeststatusRoutes from './src/routes/friendrequeststatus';
 import roleRoutes from './src/routes/roles';
 import sportRoutes from './src/routes/sports';
+import gamestatusRoutes from './src/routes/gamestatuses';
+import gametypeRoutes from './src/routes/gametypes';
+import groundtypeRoutes from './src/routes/groundtypes';
+import teamRoutes from './src/routes/teams';
+import userteamRoutes from './src/routes/user_teams';
+import positionRoutes from './src/routes/positions';
+import usergameRoutes from './src/routes/user_games';
+import gameRoutes from './src/routes/games';
+import qualificationgameRoutes from './src/routes/qualificationgames';
+import friendRoutes from './src/routes/friends';
 import authRoutes from './src/routes/auth';
 
 import db from './src/config/database';
@@ -22,9 +32,19 @@ class Server {
 		roles: 'api/roles',
 		communes: '/api/communes',
 		regions: '/api/regions',
-		friendrequeststatus: 'api/friendrequeststatus',
+		friendrequeststatus: 'api/friendrequeststatuses',
 		login: '/api/login',
-		sports: '/api/sports'
+		sports: '/api/sports',
+		gamestatuses: 'api/gamestatuses',
+		gametypes: 'api/gametypes',
+		groundtypes: 'api/groundtypes',
+		teams: 'api/teams',
+		userteams: 'api/userteams',
+		positions: 'api/positions',
+		usergames: 'api/usergames',
+		games: 'api/games',
+		qualificationgames: 'api/qualificationgames',
+		friends: 'api/friends'
 	}
 
 	constructor() {
@@ -66,6 +86,17 @@ class Server {
 		this.app.use(this.paths.friendrequeststatus, 
 			friendrequeststatusRoutes);
 		this.app.use(this.paths.sports, sportRoutes);
+		this.app.use(this.paths.gamestatuses, gamestatusRoutes);
+		this.app.use(this.paths.gametypes, gametypeRoutes);
+		this.app.use(this.paths.groundtypes, groundtypeRoutes);
+		this.app.use(this.paths.teams, teamRoutes);
+		this.app.use(this.paths.userteams, userteamRoutes);
+		this.app.use(this.paths.positions, positionRoutes);
+		this.app.use(this.paths.usergames, usergameRoutes);
+		this.app.use(this.paths.games, gameRoutes);
+		this.app.use(this.paths.qualificationgames, 
+			qualificationgameRoutes);
+		this.app.use(this.paths.friends, friendRoutes);
 	}
 
 	listen() {

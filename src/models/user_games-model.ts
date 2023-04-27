@@ -1,20 +1,21 @@
 import { DataTypes, Model, Association } from 'sequelize';
 import db from '../config/database';
+
 import User from './users-model';
 import Game from './games-model';
-import Team from './teams-model';
+import UserTeam from './user_teams-model';
 
 interface UserGame extends Model {
     id: number;
     isVictory: boolean;
-    position_id: Game,
-    user_id: User,
-    team_id: Team,
-    game_id: Game,
+    position_id: Game;
+    user_id: User;
+    userteam_id: UserTeam;
+    game_id: Game;
     associations: {
         games: Association<Game, UserGame>;
         users: Association<User, UserGame>;
-        teams: Association<Team, UserGame>;
+        userteams: Association<UserTeam, UserGame>;
     }
 }
 
@@ -32,16 +33,16 @@ const UserGame = db.define<UserGame>('UserGame',{
     }
 });
 
-UserGame.belongsTo(Team, {
+UserGame.belongsTo(UserTeam, {
     foreignKey: {
-        name: 'team_id',
+        name: 'userteam_id',
         allowNull: true,
     }
 });
 
-Team.hasMany(UserGame, {
+UserTeam.hasMany(UserGame, {
     foreignKey: {
-        name: 'team_id',
+        name: 'userteam_id',
         allowNull: true,
     }
 });
