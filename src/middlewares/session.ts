@@ -14,18 +14,38 @@ const checkJwt = (req: RequestExt, res: Response, next: NextFunction) => {
         const isUser = verifyToken(`${jwt}`);
 
         if(!isUser){
-            res.status(401);
-            res.send('SESSION_NO_VALIDA')
+            return res.status(403).json({
+                status: 403,
+                message: 'Token Expirado',
+            });
         } else {
-
             req.user = isUser;
-            console.log({jwtByUser});
-            next();
+            return next();
         }
     } catch(e) {
-        res.status(400);
-        res.send('SESSION_NO_VALIDATE');
+        return res.status(401).json({
+            status: 401,
+            message: 'Token no valido',
+        });
     }
 };
 
-export { checkJwt };
+function checkRole(role: [string]) {
+        return function (req: any, res: Response, next: NextFunction) {
+        const { user } = req;
+        console.log(user.roles);
+        for (let i = 0; i < user.roles.length; i++) {
+            if (role.includes(user.roles[i].role)) {
+                return next();
+            }
+        }
+        return res.status(401).json({
+        status: 401,
+        message: 'El usuario no tiene el rol necesario',
+        });
+    };
+}
+
+
+
+export { checkJwt, checkRole };

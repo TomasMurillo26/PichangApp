@@ -1,23 +1,64 @@
-import { Request, Response } from "express";
-import { loginUser, registerNewUser } from "../services/auth-services";
+import { Request, Response } from 'express';
+import { generateToken } from "../utils/jwt.handle";
+import { verified } from "../utils/bcrypt.handle";
+import User from '../models/users-model';
+import Role from '../models/roles-model';
 
-const registerCtrl = async ({body}: Request, res: Response) => {
-    const responseUser = await registerNewUser(body);
-    res.send(responseUser);
-};
+export const loginUser = async (req: Request, res: Response) => {
+    try{
+        const { password, email } = req.body as User;
+        let userDB:any = [];
+        const user = await User.findOne({
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+            where: { email },
+            include: {
+                model: Role,
+                attributes: { exclude: ['createdAt', 'updatedAt'] },
+                as: 'roles',
+                through: {attributes: []}
+            }
+        });
+        if (!user) {
+            return res.status(401).json({
+                status: 401,
+                data: {},
+                message: 'Usuario o contraseña incorrectos',
+            });
+        }
 
-const loginCtrl = async ({body}: Request, res: Response) => {
-    const {email, password} = body;
-    const responseUser = await loginUser({email, password});
+        const passwordHash = user.password;
 
-    if(responseUser === 'INCORRECT_PASSWORD'){
-        res.status(403)
-        res.send(responseUser)
-    }else{
-        res.send(responseUser);
+        const isCorrect = await verified(password, passwordHash);
+
+        // Incorrect Password
+        if (!isCorrect) {
+            return res.status(401).json({
+            status: 401,
+            data: {},
+            message: 'Usuario o contraseña incorrectos',
+            });
+        }
+
+        userDB.push(user);
+
+        const token = await generateToken(userDB);
+        const data = {
+            token,
+            user:user
+        };
+
+        return res.json({
+            status: 200,
+            data: data,
+            message: 'Usuario Logueado con éxito',
+        })
+    }catch{
+
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error General',
+        });
     }
-
-
 };
 
-export { registerCtrl, loginCtrl };

@@ -1,28 +1,78 @@
-import express from 'express'
-import bodyParser from 'body-parser'
-import cors from 'cors'
+import express, { Application } from 'express';
+import cors from 'cors';
 
-const app = express();
+import userRoutes  from './src/routes/users';
+import regionRoutes  from './src/routes/regions';
+import communeRoutes  from './src/routes/communes';
+import friendrequeststatusRoutes from './src/routes/friendrequeststatus';
+import roleRoutes from './src/routes/roles';
+import sportRoutes from './src/routes/sports';
+import authRoutes from './src/routes/auth';
 
-const corsOptions = {
-	origin: 'http://localhost:8080/'
-		};
-app.use (cors(corsOptions));
+import db from './src/config/database';
+import bodyParser from 'body-parser';
 
-// parse requests of content-type - application/json
 
-app.use (bodyParser.json());
-// parse requests of content-type - application/x-www-form-urlencoded
+class Server {
 
-app.use (bodyParser.urlencoded({extended:true}));
+	private app: Application;
+	private port: string;
+	private paths = {
+		users: '/api/users',
+		roles: 'api/roles',
+		communes: '/api/communes',
+		regions: '/api/regions',
+		friendrequeststatus: 'api/friendrequeststatus',
+		login: '/api/login',
+		sports: '/api/sports'
+	}
 
-//simple route
-app.get ('/', (_req, res) => {
-res.json({message: 'Welcome to PichangApp'});
-});
+	constructor() {
+		this.app = express();
+		this.port = process.env.PORT || '8080';
 
-// set port, listen for requests
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-console.log (`Server is running on port $(PORT).` );
-});
+		//Metodos iniciales
+		this.middlewares();
+		this.routes();  
+		this.dbConnection();
+	}
+
+	async dbConnection() {
+		try{
+			await db.authenticate();
+			console.log('Database online');
+		}catch(e){
+			console.error('No se conecto',e);
+		}
+	}
+
+	middlewares() {
+
+		//CORS
+		this.app.use(cors());
+		//body-parser
+		this.app.use(bodyParser.json()) // for parsing application/json
+		this.app.use(bodyParser.urlencoded({ extended: true }))
+		//Carpeta pública
+		this.app.use( express.static('public'))
+	}
+
+	routes(){
+		this.app.use(this.paths.users, userRoutes);
+		this.app.use(this.paths.regions, regionRoutes);
+		this.app.use(this.paths.communes, communeRoutes);
+		this.app.use(this.paths.roles, roleRoutes);
+		this.app.use(this.paths.login, authRoutes);
+		this.app.use(this.paths.friendrequeststatus, 
+			friendrequeststatusRoutes);
+		this.app.use(this.paths.sports, sportRoutes);
+	}
+
+	listen() {
+		this.app.listen( this.port, () => {
+			console.log('Servidor corriendo en puerto '+ this.port);
+		})
+	}
+}
+
+export default Server;

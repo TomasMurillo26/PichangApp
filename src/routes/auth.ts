@@ -1,16 +1,9 @@
-import { 
-    // Request, 
-    // Response, 
-    Router } 
-    from "express";
-import { registerCtrl, loginCtrl } from "../controllers/auth-controllers";
+import { Router } from "express";
+import { loginUser } from "../controllers/auth-controllers";
 
 const router = Router();
 
-// **/auth/register
-router.post('/register', registerCtrl);
+// Login
+router.post('/', loginUser);
 
-// Update party
-router.post('/login', loginCtrl);
-
-export { router };
+export default router;
