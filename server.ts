@@ -10,6 +10,7 @@ import sportRoutes from './src/routes/sports';
 import gamestatusRoutes from './src/routes/gamestatuses';
 import gametypeRoutes from './src/routes/gametypes';
 import groundtypeRoutes from './src/routes/groundtypes';
+import groundRoutes from './src/routes/grounds';
 import teamRoutes from './src/routes/teams';
 import userteamRoutes from './src/routes/user_teams';
 import positionRoutes from './src/routes/positions';
@@ -29,22 +30,23 @@ class Server {
 	private port: string;
 	private paths = {
 		users: '/api/users',
-		roles: 'api/roles',
+		roles: '/api/roles',
 		communes: '/api/communes',
 		regions: '/api/regions',
-		friendrequeststatus: 'api/friendrequeststatuses',
+		friendrequeststatuses: '/api/friendrequeststatuses',
 		login: '/api/login',
 		sports: '/api/sports',
-		gamestatuses: 'api/gamestatuses',
-		gametypes: 'api/gametypes',
-		groundtypes: 'api/groundtypes',
-		teams: 'api/teams',
-		userteams: 'api/userteams',
-		positions: 'api/positions',
-		usergames: 'api/usergames',
-		games: 'api/games',
-		qualificationgames: 'api/qualificationgames',
-		friends: 'api/friends'
+		gamestatuses: '/api/gamestatuses',
+		gametypes: '/api/gametypes',
+		groundtypes: '/api/groundtypes',
+		grounds: '/api/grounds',
+		teams: '/api/teams',
+		userteams: '/api/userteams',
+		positions: '/api/positions',
+		usergames: '/api/usergames',
+		games: '/api/games',
+		qualificationgames: '/api/qualificationgames',
+		friends: '/api/friends'
 	}
 
 	constructor() {
@@ -83,11 +85,12 @@ class Server {
 		this.app.use(this.paths.communes, communeRoutes);
 		this.app.use(this.paths.roles, roleRoutes);
 		this.app.use(this.paths.login, authRoutes);
-		this.app.use(this.paths.friendrequeststatus, 
+		this.app.use(this.paths.friendrequeststatuses, 
 			friendrequeststatusRoutes);
 		this.app.use(this.paths.sports, sportRoutes);
 		this.app.use(this.paths.gamestatuses, gamestatusRoutes);
 		this.app.use(this.paths.gametypes, gametypeRoutes);
+		this.app.use(this.paths.grounds, groundRoutes);
 		this.app.use(this.paths.groundtypes, groundtypeRoutes);
 		this.app.use(this.paths.teams, teamRoutes);
 		this.app.use(this.paths.userteams, userteamRoutes);

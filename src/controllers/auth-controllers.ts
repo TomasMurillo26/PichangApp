@@ -8,16 +8,18 @@ export const loginUser = async (req: Request, res: Response) => {
     try{
         const { password, email } = req.body as User;
         let userDB:any = [];
+
         const user = await User.findOne({
             attributes: { exclude: ['createdAt', 'updatedAt'] },
             where: { email },
-            include: {
+            include: [{
                 model: Role,
-                attributes: { exclude: ['createdAt', 'updatedAt'] },
                 as: 'roles',
-                through: {attributes: []}
-            }
+                through: {attributes: []},
+                attributes: { exclude: ['createdAt', 'updatedAt'] },
+            }]
         });
+
         if (!user) {
             return res.status(401).json({
                 status: 401,

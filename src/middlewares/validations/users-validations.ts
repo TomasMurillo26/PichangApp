@@ -58,6 +58,8 @@ const birthday = Validations.string(
     "birthday", 
     "La fecha de nacimiento es requerida.",
     true)
+    .isDate({ format: 'YYYY-MM-DD', strictMode: true, delimiters: ['-'] })
+    .withMessage('La fecha no tiene el formato adecuado.');
 
 const email_unique = Validations.string("email", "Un Email es requerido.", true)
     .isEmail()

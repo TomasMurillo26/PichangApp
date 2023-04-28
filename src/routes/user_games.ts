@@ -7,7 +7,7 @@ import {
     usergameExist
 } from '../middlewares/validations/user_games-validations';
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { checkJwt, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -27,7 +27,7 @@ router.get(
 router.post('/',
     [
         checkJwt,
-        // checkRole(['Jugador']),
+        checkRole(['Jugador']),
         validateError
     ],
     post);

@@ -33,7 +33,8 @@ const checkJwt = (req: RequestExt, res: Response, next: NextFunction) => {
 function checkRole(role: [string]) {
         return function (req: any, res: Response, next: NextFunction) {
         const { user } = req;
-        console.log(user.roles);
+        console.log(user);
+        // console.log(user.roles);
         for (let i = 0; i < user.roles.length; i++) {
             if (role.includes(user.roles[i].role)) {
                 return next();
