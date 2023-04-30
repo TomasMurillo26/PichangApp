@@ -8,7 +8,7 @@ import {
 } from '../middlewares/validations/sports-validations';
 import { getAll, getOne, post, put, toggleActivated  } from "../controllers/sports-controllers";
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -21,6 +21,7 @@ router.get(
 router.get(
     '/:id', 
     [
+        // Validaciones
         sportExist,
         validateError
     ],
@@ -30,7 +31,8 @@ router.get(
 router.post(
     '/', 
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Super Administrador']),
         //Validaciones
         name,
         min_players,
@@ -43,7 +45,8 @@ router.post(
 router.put(
     '/:id',
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Super Administrador']),
         //Validaciones
         name_unique,
         min_players,
@@ -57,7 +60,9 @@ router.put(
 router.put(
     '/toggle/:id',
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Super Administrador']),
+        // Validaciones
         sportExist,
         validateError
     ], 

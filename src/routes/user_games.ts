@@ -4,10 +4,11 @@ import {
     getOne, 
     post } from '../controllers/user-games-controllers';
 import { 
+    game_id,
     usergameExist
 } from '../middlewares/validations/user_games-validations';
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt, checkRole } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -26,8 +27,9 @@ router.get(
 
 router.post('/',
     [
-        checkJwt,
+        verifyToken,
         checkRole(['Jugador']),
+        game_id,
         validateError
     ],
     post);

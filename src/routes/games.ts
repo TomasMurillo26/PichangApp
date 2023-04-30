@@ -14,7 +14,7 @@ import {
 } from '../middlewares/validations/games-validations';
 import { getAll, getOne, post, put  } from "../controllers/games-controllers";
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -27,6 +27,7 @@ router.get(
 router.get(
     '/:id', 
     [
+        // Validaciones 
         gameExist,
         validateError
     ],
@@ -36,8 +37,9 @@ router.get(
 router.post(
     '/', 
     [
-        checkJwt,
-        //Validaciones
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
         address,
         latitude,
         longitude,
@@ -56,8 +58,9 @@ router.post(
 router.put(
     '/:id',
     [
-        checkJwt,
-        //Validaciones
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
         start_hour,
         end_hour,
         date,

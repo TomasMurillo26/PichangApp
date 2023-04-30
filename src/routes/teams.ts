@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { getAll, getOne, post, put, toggleActivated } from '../controllers/teams-controllers';
+import { 
+    getAll, 
+    getOne, 
+    post, 
+    put, 
+    toggleActivated } from '../controllers/teams-controllers';
 import { 
     name,
     name_unique,
@@ -8,7 +13,7 @@ import {
     teamExist
 } from '../middlewares/validations/teams-validations';
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -27,8 +32,8 @@ router.get(
 
 router.post('/',
     [
-        checkJwt,
-        // checkRole(['Jugador']),
+        verifyToken,
+        checkRole(['Jugador']),
         name,
         sport_id,
         createduser_id,
@@ -38,8 +43,8 @@ router.post('/',
 
 router.put('/:id',
     [
-        checkJwt,
-        // checkRole(['Jugador']),
+        verifyToken,
+        checkRole(['Jugador']),
         name_unique,
         teamExist,
         validateError
@@ -48,8 +53,8 @@ router.put('/:id',
 
 router.put('/toggle/:id',
     [
-        checkJwt,
-        // checkRole(['Jugador']),
+        verifyToken,
+        checkRole(['Jugador']),
         teamExist,
         validateError
     ],

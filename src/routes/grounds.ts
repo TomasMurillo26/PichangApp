@@ -8,7 +8,7 @@ import {
 } from '../middlewares/validations/grounds-validations';
 import { getAll, getOne, post, put } from "../controllers/grounds-controllers";
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -21,6 +21,7 @@ router.get(
 router.get(
     '/:id', 
     [
+        // Validaciones
         groundExist,
         validateError
     ],
@@ -30,8 +31,9 @@ router.get(
 router.post(
     '/', 
     [
-        checkJwt,
-        //Validaciones
+        verifyToken,
+        checkRole(['Super Administrador', 'Jugador']),
+        // Validaciones
         name,
         groundtype_id,
         commune_id,
@@ -43,7 +45,8 @@ router.post(
 router.put(
     '/:id',
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Super Administrador']),
         //Validaciones
         name_unique,
         groundtype_id,

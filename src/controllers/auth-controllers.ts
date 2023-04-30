@@ -1,66 +1,71 @@
 import { Request, Response } from 'express';
-import { generateToken } from "../utils/jwt.handle";
 import { verified } from "../utils/bcrypt.handle";
 import User from '../models/users-model';
 import Role from '../models/roles-model';
+import { sign } from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'token.010101';
 
 export const loginUser = async (req: Request, res: Response) => {
-    try{
-        const { password, email } = req.body as User;
-        let userDB:any = [];
+    const { email, password } = req.body;
 
-        const user = await User.findOne({
+    User.scope('withPassword')
+        .findOne({
             attributes: { exclude: ['createdAt', 'updatedAt'] },
-            where: { email },
-            include: [{
+            where: { email, activated: 1 },
+            include: 
+            {
                 model: Role,
                 as: 'roles',
-                through: {attributes: []},
                 attributes: { exclude: ['createdAt', 'updatedAt'] },
-            }]
-        });
-
-        if (!user) {
-            return res.status(401).json({
-                status: 401,
-                data: {},
-                message: 'Usuario o contraseña incorrectos',
-            });
-        }
-
-        const passwordHash = user.password;
-
-        const isCorrect = await verified(password, passwordHash);
-
-        // Incorrect Password
-        if (!isCorrect) {
-            return res.status(401).json({
-            status: 401,
-            data: {},
-            message: 'Usuario o contraseña incorrectos',
-            });
-        }
-
-        userDB.push(user);
-
-        const token = await generateToken(userDB);
-        const data = {
-            token,
-            user:user
-        };
-
-        return res.json({
-            status: 200,
-            data: data,
-            message: 'Usuario Logueado con éxito',
+            },
         })
-    }catch{
+        .then(async (userDB) => {
+            const isCorrect = await verified(password, userDB?.password ?? '');
+            if (!userDB) {
+                return res.status(401).json({
+                    status: 401,
+                    data: {},
+                    message: 'Usuario o contraseña incorrectos',
+                });
+            }
+            if (!isCorrect) {
+                return res.status(401).json({
+                    status: 401,
+                    data: {},
+                    message: 'Usuario o contraseña incorrectos',
+                });
+            }
+            
+            const token = sign(
+                {
+                    user: userDB
+                }, 
+                    JWT_SECRET, {
+                    expiresIn: '2h',
+            });
 
-        return res.status(500).json({
-            status: 500,
-            data: {},
-            message: 'Error General',
+            return res.status(200).json({
+                    status: 200,
+                    data: {userDB, token},
+                    message: 'Usuario Logueado con Éxito',
+                });
+            })
+        .catch((error) => {
+            console.log(error);
+            if (error) {
+                return res.status(500).json({
+                    status: 500,
+                    data: {},
+                    message: 'Error General',
+                });
+            }
+
+            return res.status(500).json({
+                status: 500,
+                data: {},
+                message: 'Error General',
+            });
         });
-    }
 };
 

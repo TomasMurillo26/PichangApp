@@ -8,7 +8,6 @@ import UserTeam from './user_teams-model';
 interface UserGame extends Model {
     id: number;
     isVictory: boolean;
-    position_id: Game;
     user_id: User;
     userteam_id: UserTeam;
     game_id: Game;

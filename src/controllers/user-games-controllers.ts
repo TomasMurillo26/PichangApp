@@ -165,21 +165,20 @@ export const post = async (req: Request, res: Response) => {
     try{
         const {
             game_id,
-            isVictory
             //userteam_id
-            // user_id: req
         } = req.body as UserGame;
-        
+
+        console.log('NO ENTRES', game_id);
+
         const element = await UserGame.create({
             game_id,
-            isVictory
             //userteam_id
-            // user_id: req
+            user_id: req.user.id
         }, 
         { transaction }
         );
 
-        if(!element) throw new Error('Jugador agregado con éxito');
+        if(!element) throw new Error('No se pudo agregar al jugador');
 
         await transaction.commit();
 

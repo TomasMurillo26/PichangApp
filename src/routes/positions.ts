@@ -7,21 +7,20 @@ import {
 } from '../middlewares/validations/positions-validations';
 import { getAll, getOne, post, put } from "../controllers/positions-controllers";
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
 router.get(
     '/',
-    [
-        validateError
-    ],
+    [],
     getAll
 );
 
 router.get(
     '/:id', 
     [
+        // Validaciones
         positionExist,
         validateError
     ],
@@ -31,7 +30,8 @@ router.get(
 router.post(
     '/', 
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Super Administrador']),
         //Validaciones
         name,
         sport_id,
@@ -43,7 +43,8 @@ router.post(
 router.put(
     '/:id',
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Super Administrador']),
         //Validaciones
         name_unique,
         positionExist,

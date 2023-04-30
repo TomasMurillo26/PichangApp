@@ -56,6 +56,16 @@ const User = db.define<User>('User',{
         allowNull: false,
         defaultValue: true,
     }
+},
+{
+    defaultScope: {
+        attributes: { exclude: ['createdAt', 'updatedAt', 'password'] },
+    },
+    scopes: {
+        withPassword: {
+            attributes: {include: ['password']},
+        }
+    }
 });
 
 Role.belongsToMany(User, {

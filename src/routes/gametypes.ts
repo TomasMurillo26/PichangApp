@@ -4,23 +4,27 @@ import {
     gametypesExist,
     name_unique
 } from '../middlewares/validations/gametypes-validations';
-import { getAll, getOne, post, put } from "../controllers/gametypes-controllers";
+import { 
+    getAll, 
+    getOne, 
+    post, 
+    put 
+} from "../controllers/gametypes-controllers";
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
 router.get(
     '/',
-    [
-        validateError
-    ],
+    [],
     getAll
 );
 
 router.get(
     '/:id', 
     [
+        // Validaciones
         gametypesExist,
         validateError
     ],
@@ -30,8 +34,9 @@ router.get(
 router.post(
     '/', 
     [
-        checkJwt,
-        //Validaciones
+        verifyToken,
+        checkRole(['Super Administrador']),
+        // Validaciones
         name,
         validateError
     ],
@@ -41,7 +46,7 @@ router.post(
 router.put(
     '/:id',
     [
-        checkJwt,
+        verifyToken,
         //Validaciones
         name_unique,
         gametypesExist,

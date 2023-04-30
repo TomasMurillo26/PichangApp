@@ -8,7 +8,7 @@ import {
     userteamExist
 } from '../middlewares/validations/user_teams-validations';
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -20,6 +20,7 @@ router.get(
 router.get(
     '/:id', 
     [
+        //Validaciones
         userteamExist,
         validateError
     ],
@@ -27,8 +28,9 @@ router.get(
 
 router.post('/',
     [
-        checkJwt,
-        // checkRole(['Jugador']),
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
         user_id,
         position_id,
         team_id,
@@ -38,8 +40,9 @@ router.post('/',
 
 router.put('/:id',
     [
-        checkJwt,
-        // checkRole(['Jugador']),
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
         position_unique,
         userteamExist,
         validateError

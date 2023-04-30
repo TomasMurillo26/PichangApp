@@ -6,7 +6,7 @@ import {
 } from '../middlewares/validations/friends-validations';
 import { getAll, getOne, post, put, toggleActivated  } from "../controllers/friends-controllers";
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -19,6 +19,7 @@ router.get(
 router.get(
     '/:id', 
     [
+        // Validaciones
         friendExist,
         validateError
     ],
@@ -28,8 +29,9 @@ router.get(
 router.post(
     '/', 
     [
-        checkJwt,
-        //Validaciones
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
         user_id,
         friend_id,
         validateError
@@ -40,8 +42,9 @@ router.post(
 router.put(
     '/:id',
     [
-        checkJwt,
-        //Validaciones
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
         user_id,
         friend_id,
         friendExist,
@@ -53,7 +56,9 @@ router.put(
 router.put(
     '/toggle/:id',
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
         friendExist,
         validateError
     ], 

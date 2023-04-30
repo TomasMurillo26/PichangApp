@@ -17,7 +17,7 @@ import {
     nickname_unique
 } from '../middlewares/validations/users-validations';
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
@@ -33,10 +33,11 @@ router.get(
         validateError
     ],
     getOne);
+
 router.post('/',
     [
-        checkJwt,
-        // checkRole(['Super Administrador']),
+        verifyToken,
+        checkRole(['Super Administrador']),
         // Validaciones
         email,
         role_id,
@@ -50,8 +51,8 @@ router.post('/',
 
 router.put('/:id',
     [
-        checkJwt,
-        // checkRole(['Jugador']),
+        verifyToken,
+        checkRole(['Jugador']),
         // Validaciones
         nickname_unique,
         birthday,
@@ -61,8 +62,8 @@ router.put('/:id',
 
 router.put('/toggle/:id',
     [
-        checkJwt,
-        // checkRole(['Super Administrador']),
+        verifyToken,
+        checkRole(['Super Administrador']),
         // Validaciones
         userExist,
         validateError

@@ -6,21 +6,20 @@ import {
 } from '../middlewares/validations/gamestatuses-validations';
 import { getAll, getOne, post, put } from "../controllers/gamestatuses-controllers";
 import validateError from '../middlewares/validations/error-handler';
-import { checkJwt } from '../middlewares/session';
+import { verifyToken, checkRole } from '../middlewares/session';
 
 const router = Router();
 
 router.get(
     '/',
-    [
-        validateError
-    ],
+    [],
     getAll
 );
 
 router.get(
     '/:id', 
     [
+        // Validaciones
         gamestatusExist,
         validateError
     ],
@@ -30,7 +29,8 @@ router.get(
 router.post(
     '/', 
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Super Administrador']),
         //Validaciones
         name,
         validateError
@@ -41,7 +41,8 @@ router.post(
 router.put(
     '/:id',
     [
-        checkJwt,
+        verifyToken,
+        checkRole(['Super Administrador']),
         //Validaciones
         name_unique,
         gamestatusExist,
