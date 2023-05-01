@@ -1,31 +1,69 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../utils/jwt.handle";
-import { JwtPayload } from "jsonwebtoken";
+import { TokenExpiredError, verify } from 'jsonwebtoken';
+import User from "../models/users-model";
 
-interface RequestExt extends Request{
-    user?: string | JwtPayload;
-}
+const JWT_SECRET = process.env.JWT_SECRET || 'token.010101';
 
-const checkJwt = (req: RequestExt, res: Response, next: NextFunction) => { 
-    try {
+// Verificar el token del usuario
+const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
 
-        const jwtByUser = req.headers.authorization || "";
-        const jwt = jwtByUser.split(" ").pop();
-        const isUser = verifyToken(`${jwt}`);
+    if (!token) {
+        return res.status(401).json({
+            status: 401,
+            message: 'No has iniciado sesión aún.',
+        });
+    }else{
+        verify(token, JWT_SECRET, async (err, decoded?: any) => {
+        if (err) {
+            if (err instanceof TokenExpiredError) {
+            return res.status(403).json({
+                status: 403,
+                message: 'Token Expirado',
+            });
+            }
 
-        if(!isUser){
-            res.status(401);
-            res.send('SESSION_NO_VALIDA')
-        } else {
-
-            req.user = isUser;
-            console.log({jwtByUser});
-            next();
+            return res.status(401).json({
+            status: 401,
+            message: 'Token no valido',
+            });
         }
-    } catch(e) {
-        res.status(400);
-        res.send('SESSION_NO_VALIDATE');
+        req.user = decoded.user;
+
+        const user = await User.findOne({
+            where: { id: decoded.user.id, activated: true },
+        });
+
+        if (!user) {
+            return res.status(403).json({
+            status: 403,
+            message: 'El usuario no se encuentra activo',
+            });
+        }
+
+        return next();
+        });
+        return;
     }
 };
 
-export { checkJwt };
+
+// Verificar roles de usuario
+function checkRole(role: any) {
+        return function (req: any, res: Response, next: NextFunction) {
+        const { user } = req;
+        
+        for (let i = 0; i < user.roles.length; i++) {
+            if (role.includes(user.roles[i].name)) {
+                return next();
+            }
+        }
+        return res.status(401).json({
+            status: 401,
+            message: 'El usuario no tiene el rol necesario',
+        });
+    };
+}
+
+export { verifyToken, checkRole };
