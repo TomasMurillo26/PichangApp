@@ -122,8 +122,8 @@ export const post = async (req: Request, res: Response) => {
             address,
             groundtype_id,
             commune_id,
-            // tariff,
-        } = req.body as Ground;
+            tariff,
+        } = req.body;
         
         const element = await Ground.create({
             name,
@@ -132,7 +132,7 @@ export const post = async (req: Request, res: Response) => {
             longitude,
             groundtype_id,
             commune_id,
-            // tariff
+            tariff
         }, 
         { transaction }
         );

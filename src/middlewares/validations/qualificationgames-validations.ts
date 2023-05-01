@@ -8,10 +8,16 @@ const game_id = Validations.relationExist(
     'Es requerido un partido',
     true,
     Game
-)
+);
+
+const value = Validations.isPositiveNumeric(
+    'value',
+    'Es necesaria una calificación',
+    true
+);
 
 const qualificationgameExist = Validations.existInDB(QualificationGame);
 
-export { qualificationgameExist, game_id }
+export { qualificationgameExist, game_id, value }
 
 

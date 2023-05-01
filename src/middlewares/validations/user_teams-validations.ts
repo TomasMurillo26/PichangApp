@@ -1,6 +1,5 @@
 import { Op } from "sequelize";
 import Validations from "./base-validations";
-import User from "../../models/users-model";
 import Team from "../../models/teams-model";
 import Position from "../../models/positions-model";
 import UserTeam from "../../models/user_teams-model";
@@ -46,15 +45,8 @@ const position_unique = Validations.isNumeric('position_id', "Una posición es r
         if (item) throw new Error("Un usuario con esta posición ya está registrado en el equipo");
     });
 
-const user_id = Validations.relationExist(
-    'user_id',
-    'Es requerido un usuario',
-    true,
-    User
-);
-
 const userteamExist = Validations.existInDB(UserTeam);
 
-export { team_id, position_id, user_id, position_unique, userteamExist }
+export { team_id, position_id, position_unique, userteamExist }
 
 

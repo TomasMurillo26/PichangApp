@@ -190,9 +190,6 @@ export const post = async (req: Request, res: Response) => {
     const transaction = await db.transaction();
     try{
         const {
-            latitude,
-            longitude,
-            address,
             start_hour,
             end_hour,
             date,
@@ -204,9 +201,6 @@ export const post = async (req: Request, res: Response) => {
         } = req.body as Game;
         
         const element = await Game.create({
-            latitude,
-            longitude,
-            address,
             start_hour,
             end_hour,
             date,

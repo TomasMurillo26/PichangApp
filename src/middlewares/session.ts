@@ -12,7 +12,7 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     if (!token) {
         return res.status(401).json({
             status: 401,
-            message: 'No se ha proporcionado un token de autenticación',
+            message: 'No has iniciado sesión aún.',
         });
     }else{
         verify(token, JWT_SECRET, async (err, decoded?: any) => {

@@ -1,5 +1,5 @@
 import Validations from "./base-validations";
-import Position from "../../models/sports-model";
+import Position from "../../models/positions-model";
 import { Op } from "sequelize";
 import Sport from "../../models/sports-model";
 
@@ -11,10 +11,10 @@ const name = Validations.string('name', 'Este campo es requerido', true)
     .isLength({ max: 50 })
     .bail()
     .withMessage("Al menos 3 letras son requeridas y máximo 50 caracteres")
-    .custom(async (value) => {
+    .custom(async (value: string) => {
         const exist = await Position.findOne({ where: { name: value } });
         if (exist) {
-        throw Error('Una posición con este nombre ya está registrada');
+            throw Error('Una posición con este nombre ya está registrada');
         }
     });
 

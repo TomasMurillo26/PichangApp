@@ -115,13 +115,12 @@ export const post = async (req: Request, res: Response) => {
         const {
             position_id,
             team_id,
-            // user_id: req
         } = req.body as UserTeam;
-        
+
         const element = await UserTeam.create({
             position_id,
             team_id,
-            // user_id
+            user_id: req.user.id
         }, 
         { transaction }
         );

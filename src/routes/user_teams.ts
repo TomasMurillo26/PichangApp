@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { getAll, getOne, post, put } from '../controllers/user_teams-controllers';
 import { 
     team_id,
-    user_id,
     position_id,
     position_unique,
     userteamExist
@@ -31,7 +30,6 @@ router.post('/',
         verifyToken,
         checkRole(['Jugador']),
         // Validaciones
-        user_id,
         position_id,
         team_id,
         validateError

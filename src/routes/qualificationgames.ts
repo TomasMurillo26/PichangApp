@@ -5,7 +5,8 @@ import {
     post } from '../controllers/qualificationgames-controllers';
 import { 
     qualificationgameExist,
-    game_id
+    game_id,
+    value
 } from '../middlewares/validations/qualificationgames-validations';
 import validateError from '../middlewares/validations/error-handler';
 import { verifyToken, checkRole } from '../middlewares/session';
@@ -29,6 +30,7 @@ router.post('/',
     [
         verifyToken,
         checkRole(['Jugador']),
+        value,
         game_id,
         validateError
     ],

@@ -8,10 +8,11 @@ import User from '../models/users-model';
 
 export const getAll = async (req: Request, res: Response) => {
     try{
-        const { sport_name, activated } = req.query;
+        const { sport_name, sport_id, team_name, activated } = req.query;
 
         const elementList = await Team.findAll({
-            attributes: { exclude: ['updatedAt', 'createdAt'] },
+            attributes: { exclude: ['updatedAt', 'createdAt', 'sport_id',
+            'createduser_id'] },
             include: 
             [
                 {
@@ -19,12 +20,14 @@ export const getAll = async (req: Request, res: Response) => {
                     attributes: { exclude: ['updatedAt', 'createdAt', 
                     'min_players', 'max_players']},
                     where: {
-                        ...(sport_name && {name: {[Op.like]: sport_name} })
+                        ...(sport_name && {name: {[Op.like]: sport_name} }),
+                        ...(sport_id && {id: sport_id })
                     }
                 },
             ],
             where:{
                 ...(activated && { activated }),
+                ...(team_name && {name: {[Op.like]: team_name} }),
             }
         });
 
@@ -97,7 +100,7 @@ export const post = async (req: Request, res: Response) => {
         const element = await Team.create({
             name,
             sport_id,
-            // createduser_id: req
+            createduser_id: req.user.id
         }, 
         { transaction }
         );

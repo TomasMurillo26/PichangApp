@@ -114,13 +114,12 @@ export const post = async (req: Request, res: Response) => {
         const {
             game_id,
             value,
-            // user_id: req
         } = req.body as QualificationGame;
         
         const element = await QualificationGame.create({
             game_id,
             value,
-            // user_id: req
+            user_id: req.user.id
         }, 
         { transaction }
         );

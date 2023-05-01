@@ -2,7 +2,6 @@ import Validations from "./base-validations";
 import Team from "../../models/teams-model";
 import { Op } from "sequelize";
 import Sport from "../../models/sports-model";
-import User from "../../models/users-model";
 
 const name = Validations.string('name', 'Este campo es requerido', true)
     .trim()
@@ -45,24 +44,17 @@ const sport_id = Validations.relationExist(
     'Es requerido un deporte',
     true,
     Sport
-);
-
-const createduser_id = Validations.relationExist(
-    'createduser_id',
-    'Es requerido un usuario',
-    true,
-    User
-    ).custom(async (value: number, { req }) => {
-        const sport_id = req.body?.sport_id;
+).custom(async (value: number, { req }) => {
         const team = await Team.findOne({
         where: {
-            ...(sport_id && { sport_id }),
-            createduser_id: { value },
+            [Op.and]: [{sport_id: value},{createduser_id: req.user.id}]
         },
     });
     if (team) throw new Error('Ya tienes un equipo para este deporte');
 });
 
-export { teamExist, name, name_unique, sport_id, createduser_id }
+
+
+export { teamExist, name, name_unique, sport_id }
 
 

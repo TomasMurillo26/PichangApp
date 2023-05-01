@@ -9,7 +9,6 @@ import {
     name,
     name_unique,
     sport_id,
-    createduser_id,
     teamExist
 } from '../middlewares/validations/teams-validations';
 import validateError from '../middlewares/validations/error-handler';
@@ -36,7 +35,6 @@ router.post('/',
         checkRole(['Jugador']),
         name,
         sport_id,
-        createduser_id,
         validateError
     ],
     post);

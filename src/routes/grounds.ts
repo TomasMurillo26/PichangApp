@@ -1,10 +1,15 @@
 import { Router } from "express";
 import { 
-    name, 
+    name,
+    longitude,
+    latitude,
+    address,
     name_unique,
     groundtype_id,
     commune_id,
-    groundExist
+    groundExist,
+    tariff,
+    tariff_required
 } from '../middlewares/validations/grounds-validations';
 import { getAll, getOne, post, put } from "../controllers/grounds-controllers";
 import validateError from '../middlewares/validations/error-handler';
@@ -35,7 +40,12 @@ router.post(
         checkRole(['Super Administrador', 'Jugador']),
         // Validaciones
         name,
+        longitude,
+        latitude,
+        address,
         groundtype_id,
+        tariff,
+        tariff_required,
         commune_id,
         validateError
     ],

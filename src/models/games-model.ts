@@ -13,9 +13,6 @@ interface Game extends Model {
     end_hour: Date,
     date: Date,
     num_players: number,
-    latitude: number,
-    longitude: number,
-    address: string,
     sport_id: Sport,
     ground_id: Ground,
     gametype_id: GameType,
@@ -52,20 +49,7 @@ const Game = db.define<Game>('Game',{
     num_players: {
         type: DataTypes.INTEGER,
         allowNull: false,
-    },
-    latitude: {
-        type: DataTypes.DOUBLE,
-        allowNull: false,
-    },
-    longitude: {
-        type: DataTypes.DOUBLE,
-        allowNull: false,
-    },
-    address: {
-        type: DataTypes.STRING(150),
-        allowNull: false
     }
-    
 });
 
 Game.belongsTo(Ground, {

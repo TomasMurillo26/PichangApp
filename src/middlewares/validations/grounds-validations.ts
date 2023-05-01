@@ -1,9 +1,12 @@
 import Validations from "./base-validations";
+import { buildCheckFunction } from "express-validator";
 import { Op } from "sequelize";
 
 import GroundType from "../../models/groundtypes-model";
 import Ground from "../../models/grounds-model";
 import Commune from "../../models/communes-model";
+
+const paramAndQuery = buildCheckFunction(['query', 'body']);
 
 const name = Validations.string('name', 'Este campo es requerido', true)
     .trim()
@@ -62,6 +65,62 @@ const longitude = Validations.isNumeric(
     true
 );
 
+const address = Validations.string('address', 'Este campo es requerido', true)
+    .trim()
+    .notEmpty()
+    .isLength({ max: 150 })
+    .bail()
+    .withMessage("Al menos 3 letras son requeridas y máximo 150 caracteres");
+
+const tariff = Validations.isPositiveNumeric(
+    'tariff', 
+    'Este campo es requerido', 
+    false
+);
+
+
+const requiredByGroundtype = async (
+        field: string,
+        value: any,
+        groundtype_id: any,
+    ) => {
+        if (!groundtype_id) throw new Error('Es necesario ingresar un tipo de cancha primero');
+
+        let body = await GroundType.findByPk(groundtype_id, {
+            raw: true,
+        });
+
+        if (!body) throw new Error('El tipo de cancha no existe');
+    
+        const groundtype = body.id;
+
+        type RequiredParams = {
+            [key: number]: string[];
+        }
+
+        const requiredParams: RequiredParams = {
+            // Pública
+            1: [],
+            // Privada
+            2: ['tariff'],
+        };
+    
+        const required = requiredParams[groundtype].includes(field);
+    
+        if (!required) return;
+    
+        if (required && !value) {
+            throw new Error('Este campo es requerido para este rol');
+        }
+    };
+    
+const tariff_required = paramAndQuery('tariff')
+.custom(async (value, { req }) => requiredByGroundtype(
+    'tariff',
+    value,
+    req.body.groundtype_id,
+));
+
 export { 
     groundExist, 
     groundtype_id, 
@@ -69,6 +128,10 @@ export {
     name, 
     name_unique, 
     latitude, 
-    longitude }
+    longitude,
+    address,
+    tariff,
+    tariff_required
+}
 
 
