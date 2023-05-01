@@ -197,7 +197,6 @@ export const post = async (req: Request, res: Response) => {
             sport_id,
             ground_id,
             gametype_id,
-            // createduser_id REQ
         } = req.body as Game;
         
         const element = await Game.create({
@@ -209,6 +208,7 @@ export const post = async (req: Request, res: Response) => {
             ground_id,
             gametype_id,
             gamestatus_id: 1,
+            createduser_id: req.user.id
         }, 
         { transaction }
         );

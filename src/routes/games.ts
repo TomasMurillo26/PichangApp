@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { 
-    address,
-    latitude,
-    longitude,
+    // address,
+    // latitude,
+    // longitude,
     sport_id,
     ground_id,
     gametype_id,
@@ -11,6 +11,7 @@ import {
     start_hour,
     end_hour,
     gameExist,
+    createduser_id
 } from '../middlewares/validations/games-validations';
 import { getAll, getOne, post, put  } from "../controllers/games-controllers";
 import validateError from '../middlewares/validations/error-handler';
@@ -40,9 +41,9 @@ router.post(
         verifyToken,
         checkRole(['Jugador']),
         // Validaciones
-        address,
-        latitude,
-        longitude,
+        // address,
+        // latitude,
+        // longitude,
         sport_id,
         ground_id,
         gametype_id,
@@ -50,6 +51,7 @@ router.post(
         num_players,
         start_hour,
         end_hour,
+        createduser_id,
         validateError
     ],
     post

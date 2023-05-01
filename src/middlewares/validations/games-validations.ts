@@ -1,4 +1,5 @@
 import Validations from './base-validations';
+import { buildCheckFunction } from 'express-validator';
 // import { Op } from 'sequelize';
 import moment from 'moment';
 
@@ -7,6 +8,8 @@ import Game from '../../models/games-model';
 import Ground from '../../models/grounds-model';
 import GameType from '../../models/gametypes-model';
 // import User from '../../models/users-model';
+
+const paramAndQuery = buildCheckFunction(['query', 'body', 'params']);
 
 const address = Validations.string('address', 'Este campo es requerido', true)
     .trim()
@@ -37,7 +40,7 @@ const date = Validations.string('date', 'Es requerida una fecha', true)
 const start_hour = Validations.string('start_hour', 'Es necesario ingresar una hora de inicio', true)
     .custom((value) => {
         const now = moment();
-        const expTime = moment(value, "HH:mm");
+        const expTime = moment(value, "YYYY-MM-DD HH:mm");
         if (!expTime.isValid()) {
             throw new Error('La hora no tiene el formato adecuado.');
         }
@@ -49,8 +52,8 @@ const start_hour = Validations.string('start_hour', 'Es necesario ingresar una h
 
 const end_hour = Validations.string('end_hour', 'Es necesario ingresar una hora de fin', true)
     .custom((value: string, { req }) => {
-    const start = moment(req.body.start_hour, "HH:mm");
-    const end = moment(value, "HH:mm");
+    const start = moment(req.body.start_hour, "YYYY-MM-DD HH:mm");
+    const end = moment(value, "YYYY-MM-DD HH:mm");
     if (!end.isValid()) {
         throw new Error('La hora de término no tiene el formato adecuado.');
     }
@@ -83,7 +86,17 @@ const gametype_id = Validations.relationExist(
     GameType
 );
 
-//FALTA VALIDAR LA CANTIDAD DE PARTIDOS QUE UN JUGADOR PUEDE CREAR.
+const createduser_id = paramAndQuery('createduser_id')
+    .custom(async (value: number, { req }) => {
+        const game = await Game.findOne({
+            where: { createduser_id: req.user.id }
+        });
+        if (game && !value) {
+            throw new Error('Ya tienes un partido creado');
+        } else {
+            return;
+        }
+});
 
 export { 
     gameExist,
@@ -97,6 +110,7 @@ export {
     ground_id,
     gametype_id,
     address,
+    createduser_id
 }
 
 

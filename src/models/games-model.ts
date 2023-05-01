@@ -108,4 +108,18 @@ Sport.hasMany(Game, {
     }
 });
 
+Game.belongsTo(User, {
+    foreignKey: {
+        name: 'createduser_id',
+        allowNull: false,
+    }
+});
+
+User.hasMany(Game, {
+    foreignKey: {
+        name: 'createduser_id',
+        allowNull: false,
+    }
+});
+
 export default Game;
