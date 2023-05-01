@@ -4,6 +4,7 @@ import { Op } from 'sequelize';
 
 import Friend from '../models/friends-model';
 import User from '../models/users-model';
+import FriendRequestStatus from '../models/friendrequeststatus-model';
 
 
 export const getAll = async (req: Request, res: Response) => {
@@ -11,7 +12,8 @@ export const getAll = async (req: Request, res: Response) => {
         const { activated, friend_name } = req.query;
 
         const elementList = await Friend.findAll({
-            attributes: { exclude: ['updatedAt', 'createdAt'] },
+            attributes: { exclude: ['updatedAt', 'createdAt',
+            'user_id', 'friend_id', 'friendrequest_id'] },
             include: 
             [
                 {
@@ -28,6 +30,10 @@ export const getAll = async (req: Request, res: Response) => {
                     as: 'users',
                     attributes: { exclude: ['updatedAt', 'createdAt', 'password',
                     'profile_image', 'email', 'birthday'] },
+                },
+                {
+                    model: FriendRequestStatus,
+                    attributes: { exclude: ['updatedAt', 'createdAt']},
                 }
             ],
             where:{
@@ -61,7 +67,8 @@ export const getOne = async (req: Request, res: Response) => {
         const { id } = req.params;
 
         const element = await Friend.findOne({
-            attributes: { exclude: ['updatedAt', 'createdAt'] },
+            attributes: { exclude: ['updatedAt', 'createdAt', 'user_id',
+            'friend_id', 'friendrequest_id'] },
             include: 
             [
                 {
@@ -75,6 +82,10 @@ export const getOne = async (req: Request, res: Response) => {
                     as: 'users',
                     attributes: { exclude: ['updatedAt', 'createdAt', 'password',
                     'profile_image', 'email', 'birthday'] },
+                },
+                {
+                    model: FriendRequestStatus,
+                    attributes: { exclude: ['updatedAt', 'createdAt']},
                 }
             ],
             where: { id }
@@ -100,13 +111,12 @@ export const post = async (req: Request, res: Response) => {
     try{
         const {
             friend_id,
-            // icon_path
         } = req.body as Friend;
         
         const element = await Friend.create({
-            // user_id,
+            user_id: req.user.id,
             friend_id,
-            requeststatus_id: 2,
+            friendrequest_id: 2,
             activated: false
         }, 
         { transaction }

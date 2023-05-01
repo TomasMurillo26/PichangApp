@@ -4,13 +4,6 @@ import { Op } from "sequelize";
 import Friend from "../../models/friends-model";
 import User from "../../models/users-model";
 
-const user_id = Validations.relationExist(
-    'user_id', 
-    'Este campo es requerido', 
-    true, 
-    User
-);
-    
 const friend_id = Validations.relationExist(
     'friend_id',
     'Este campo es requerido',
@@ -25,7 +18,8 @@ const friend_id = Validations.relationExist(
                 [Op.and]: 
                 [
                     // { user_id },
-                    { friend_id: value }
+                    { friend_id: value },
+
                 ]
             } 
         });
@@ -36,6 +30,6 @@ const friend_id = Validations.relationExist(
 
 const friendExist = Validations.existInDB(Friend);
 
-export { user_id, friend_id, friendExist }
+export { friend_id, friendExist }
 
 

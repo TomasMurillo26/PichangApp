@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { 
     friend_id,
-    user_id,
     friendExist
 } from '../middlewares/validations/friends-validations';
 import { getAll, getOne, post, put, toggleActivated  } from "../controllers/friends-controllers";
@@ -32,7 +31,6 @@ router.post(
         verifyToken,
         checkRole(['Jugador']),
         // Validaciones
-        user_id,
         friend_id,
         validateError
     ],
@@ -45,7 +43,6 @@ router.put(
         verifyToken,
         checkRole(['Jugador']),
         // Validaciones
-        user_id,
         friend_id,
         friendExist,
         validateError
