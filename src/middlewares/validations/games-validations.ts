@@ -22,7 +22,19 @@ const num_players = Validations.isPositiveNumeric(
     'num_players', 
     'Es requerido un número de jugadores',
     true
-);
+).custom(async(value: number, {req}) => {
+    const { sport_id } = req.body;
+
+    const sport = await Sport.findByPk(sport_id);
+
+    if(!sport) throw new Error(`No existe este deporte`);
+
+    if(value < sport.min_players) throw new Error(`La cantidad de jugadores debe ser mayor que ${sport.min_players}`);
+
+    if(value > sport.max_players) throw new Error(`La cantidad de jugadores debe ser menor que ${sport.max_players}`);
+
+    return true;
+});
 
 const latitude = Validations.isNumeric('latitude', 'Es necesaria la latitud', true);
 const longitude = Validations.isNumeric('longitude', 'Es necesaria la longitud', true);
@@ -32,8 +44,10 @@ const date = Validations.string('date', 'Es requerida una fecha', true)
     .withMessage('La fecha no tiene el formato adecuado.')
     .custom((value) => {
     const now = moment(moment().format('YYYY-MM-DD'));
+
     const expDate = moment(value);
-    if (now >= expDate) throw new Error('La fecha del partido debe ser igual o superior a la actual.');
+
+    if (now > expDate) throw new Error('La fecha del partido debe ser igual o superior a la actual.');
     return true;
 });
 

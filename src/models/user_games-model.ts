@@ -6,11 +6,11 @@ import Game from './games-model';
 import UserTeam from './user_teams-model';
 
 interface UserGame extends Model {
-    id: number;
-    isVictory: boolean;
-    user_id: User;
-    userteam_id: UserTeam;
-    game_id: Game;
+    id: number,
+    isVictory: boolean,
+    user_id: number,
+    userteam_id: number,
+    game_id: number,
     associations: {
         games: Association<Game, UserGame>;
         users: Association<User, UserGame>;
@@ -50,14 +50,16 @@ UserGame.belongsTo(Game, {
     foreignKey: {
         name: 'game_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
 });
 
 Game.hasMany(UserGame, {
     foreignKey: {
         name: 'game_id',
         allowNull: false,
-    }
+    },
+
 });
 
 UserGame.belongsTo(User, {
@@ -71,7 +73,8 @@ User.hasMany(UserGame, {
     foreignKey: {
         name: 'user_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
 });
 
 export default UserGame;

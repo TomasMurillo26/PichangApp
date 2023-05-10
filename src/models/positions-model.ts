@@ -3,9 +3,9 @@ import db from '../config/database';
 import Sport from './sports-model';
 
 interface Position extends Model {
-    id: number;
-    name: string;
-    sport_id: Sport,
+    id: number,
+    name: string,
+    sport_id: number,
     associations: {
         sports: Association<Sport, Position>;
     }

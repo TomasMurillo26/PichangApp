@@ -5,11 +5,11 @@ import Position from './positions-model';
 import Team from './teams-model';
 
 interface UserTeam extends Model {
-    id: number;
-    isCaptain: boolean;
-    position_id: Position,
-    user_id: User,
-    team_id: Team
+    id: number,
+    isCaptain: boolean,
+    position_id: number,
+    user_id: number,
+    team_id: number,
     associations: {
         positions: Association<Position, UserTeam>;
         users: Association<User, UserTeam>;

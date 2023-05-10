@@ -1,10 +1,24 @@
 import {Sequelize} from 'sequelize';
 
+process.env.TZ = 'America/Santiago';
+
 const db = new Sequelize("pichangapp", "root", "12345678", {
     host: "localhost",
     dialect: "mysql",
-    // logging: false
-});
+    // logging: false,
+    timezone: process.env.TZ,
+    dialectOptions: {
+        dateStrings: true,
+        typeCast: true,
+        timezone: process.env.TZ,
+    },
+    pool: {
+        max: 1000,
+        min: 1,
+        acquire: 30000,
+        idle: 10000,
+        },
+    });
 
 db.authenticate()
     .then(() => {
@@ -14,9 +28,8 @@ db.authenticate()
         console.error("Unable to connect to the database:", err);
     });
 
-db.sync({ alter: true }).then(() => {
+db.sync({ alter: false }).then(() => {
     console.log('SYNC OK!');
 });
-
 
 export default db;

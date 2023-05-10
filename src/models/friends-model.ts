@@ -5,11 +5,11 @@ import User from './users-model';
 import FriendRequestStatus from './friendrequeststatus-model';
 
 interface Friend extends Model {
-    id: number;
-    friend_id: User,
-    user_id: User,
+    id: number,
+    friend_id: number,
+    user_id: number,
     activated: boolean,
-    requeststatus_id: FriendRequestStatus
+    requeststatus_id: number,
     associations: {
         friends: Association<User, Friend>;
         users: Association<User, Friend>;
@@ -58,7 +58,8 @@ User.hasMany(Friend, {
     foreignKey: {
         name: 'friend_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
 });
 
 Friend.belongsTo(FriendRequestStatus, {

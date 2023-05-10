@@ -5,10 +5,10 @@ import User from './users-model';
 import Game from './games-model';
 
 interface QualificationGame extends Model {
-    id: number;
-    value: number;
-    game_id: Game;
-    user_id: User;
+    id: number,
+    value: number,
+    game_id: number,
+    user_id: number,
     associations: {
         games: Association<Game, QualificationGame>;
         users: Association<User, QualificationGame>;
@@ -54,7 +54,8 @@ User.hasMany(QualificationGame, {
     foreignKey: {
         name: 'user_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
 });
 
 

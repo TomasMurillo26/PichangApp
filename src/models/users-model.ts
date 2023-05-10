@@ -3,15 +3,15 @@ import db from '../config/database';
 import Role from './roles-model';
 
 interface User extends Model {
-    id: number;
-    name: string;
-    nickname: string;
-    profile_image: string;
-    birthday: Date;
-    activated: boolean;
+    id: number,
+    name: string,
+    nickname: string,
+    profile_image: string,
+    birthday: Date,
+    activated: boolean,
     email: string,
     password: string,
-    role_id: Role,
+    role_id: number,
     associations: {
         roles: Association<Role, User>;
     }
@@ -78,6 +78,7 @@ User.belongsToMany(Role, {
     through: 'user_role',
     foreignKey: { name: 'user_id', allowNull: true },
     as: 'roles',
+    onDelete: 'cascade'
 });
 
 export default User;

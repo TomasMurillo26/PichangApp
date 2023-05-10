@@ -4,14 +4,14 @@ import GroundType from './groundtypes-model';
 import Commune from './communes-model';
 
 interface Ground extends Model {
-    id: number;
-    name: string;
-    address: string;
-    latitude: number;
-    longitude: number;
-    tariff: number;
-    groundtype_id: GroundType,
-    commune_id: Commune,
+    id: number,
+    name: string,
+    address: string,
+    latitude: number,
+    longitude: number,
+    tariff: number,
+    groundtype_id: number,
+    commune_id: number,
     associations: {
         groundtypes: Association<GroundType, Ground>;
         communes: Association<Commune, Ground>;
@@ -72,7 +72,8 @@ GroundType.hasMany(Ground, {
     foreignKey: {
         name: 'groundtype_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
 });
 
 
