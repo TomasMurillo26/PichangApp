@@ -59,7 +59,7 @@ Game.hasMany(UserGame, {
         name: 'game_id',
         allowNull: false,
     },
-
+    onDelete: 'cascade'
 });
 
 UserGame.belongsTo(User, {
