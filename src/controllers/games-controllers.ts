@@ -254,6 +254,8 @@ export const post = async (req: Request, res: Response) => {
             });
 
             if (!team){
+                await transaction.rollback();
+
                 return res.status(401).json({
                     status: 401,
                     message: 'Solo el capitán puede realizar esta acción.',
@@ -268,6 +270,8 @@ export const post = async (req: Request, res: Response) => {
             /*Si el número de jugadores del equipo es menor que
             el número de jugadores del juego, retorna un 401*/
             if (userteams < element.num_players){
+                await transaction.rollback();
+
                 return res.status(401).json({
                     status: 401,
                     message: 'No puedes crear un partido formal si no tienes tu equipo completo.',
@@ -377,6 +381,8 @@ export const enterGame = async (req: Request, res: Response) => {
         });
 
         if(usergame){
+            await transaction.rollback();
+
             return res.status(401).json({
                 status: 401,
                 message: 'Ya te uniste a este partido',
@@ -398,6 +404,8 @@ export const enterGame = async (req: Request, res: Response) => {
 
             //Si el usuario no es capitán retorna un 401
             if (!team){
+                await transaction.rollback();
+
                 return res.status(401).json({
                     status: 401,
                     message: 'Solo el capitán puede realizar esta acción.',
@@ -412,6 +420,8 @@ export const enterGame = async (req: Request, res: Response) => {
             /*Si el número de jugadores del equipo es menor que
             el número de jugadores del juego, retorna un 401*/
             if (userteams < game.num_players){
+                await transaction.rollback();
+
                 return res.status(401).json({
                     status: 401,
                     message: 'No puedes unirte a un partido formal si no tienes tu equipo completo.',
@@ -505,6 +515,8 @@ export const leaveGame = async (req: Request, res: Response) => {
 
         //Si no existe este jugador en este partido, lanza un 400
         if(!user){
+            await transaction.rollback();
+
             return res.status(400).json({
                 status: 400,
                 data: [],
@@ -526,6 +538,8 @@ export const leaveGame = async (req: Request, res: Response) => {
 
             //Si el usuario no es capitán retorna un 401
             if (!team){
+                await transaction.rollback();
+
                 return res.status(401).json({
                     status: 401,
                     message: 'Solo el capitán puede realizar esta acción.',

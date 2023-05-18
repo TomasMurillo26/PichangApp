@@ -2,6 +2,10 @@ import Validations from "./base-validations";
 import Team from "../../models/teams-model";
 import { Op } from "sequelize";
 import Sport from "../../models/sports-model";
+import UserTeam from "../../models/user_teams-model";
+import User from "../../models/users-model";
+import UserteamRequest from "../../models/userteamrequests-model";
+import Position from "../../models/positions-model";
 
 const name = Validations.string('name', 'Este campo es requerido', true)
     .trim()
@@ -53,8 +57,82 @@ const sport_id = Validations.relationExist(
     if (team) throw new Error('Ya tienes un equipo para este deporte');
 });
 
+const team_id = Validations.relationExist(
+    'team_id', 
+    'Es requerido un equipo', 
+    true, 
+    Team
+);
+
+const position_id = Validations.relationExist(
+    'position_id',
+    'Es requerida una posición',
+    true,
+    Position
+    ).bail()
+    .custom(async (value: number, { req }) => {
+        const userteam_id  = req.body?.userteam_id;
+        const userteam = await UserTeam.findByPk(userteam_id);
+
+        const positionExist = await UserTeam.findOne({
+            where: {[Op.and]:[
+                {team_id: userteam?.team_id},
+                {position_id: value}]
+            }
+        })
+
+        if (positionExist) throw new Error("Un jugador del equipo tiene ocupada esta posición");
+    });
+
+const position_unique = Validations.isNumeric('position_id', "Una posición es requerida.", true)
+    .isEmail()
+    .bail()
+    .custom(async (value: string, { req }) => {
+        const id  = req.body?.userteam_id;
+        const item = await UserTeam.findOne({
+            where: {
+                ...(id && { id: { [Op.ne]: id } }),
+                position_id: { value },
+            },
+        });
+        if (item) throw new Error("Un usuario con esta posición ya está registrado en el equipo");
+    });
 
 
-export { teamExist, name, name_unique, sport_id }
+const user_id = Validations.relationExist(
+    'user_id',
+    'Un usuario es requerido.',
+    true,
+    User
+);
+
+const userteamrequest_id = Validations.relationExist(
+    'userteamrequest_id',
+    'Este campo es requerido',
+    true,
+    UserteamRequest
+);
+
+const userteam_id = Validations.relationExist(
+    'userteam_id', 
+    'Es requerido este campo.', 
+    true, 
+    UserTeam
+);
+
+
+
+export { 
+    teamExist, 
+    name, 
+    name_unique, 
+    sport_id,
+    userteamrequest_id,
+    userteam_id,
+    user_id,
+    team_id,
+    position_unique,
+    position_id
+}
 
 
