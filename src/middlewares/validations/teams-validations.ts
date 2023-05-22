@@ -43,6 +43,8 @@ const name_unique = Validations.string('name', 'Este campo es requerido', true)
 
 const teamExist = Validations.existInDB(Team);
 
+const userteamExist = Validations.existUserteamInDB(UserTeam);
+
 const sport_id = Validations.relationExist(
     'sport_id',
     'Es requerido un deporte',
@@ -72,11 +74,10 @@ const position_id = Validations.relationExist(
     ).bail()
     .custom(async (value: number, { req }) => {
         const userteam_id  = req.body?.userteam_id;
-        const userteam = await UserTeam.findByPk(userteam_id);
 
         const positionExist = await UserTeam.findOne({
             where: {[Op.and]:[
-                {team_id: userteam?.team_id},
+                {id: userteam_id},
                 {position_id: value}]
             }
         })
@@ -84,18 +85,21 @@ const position_id = Validations.relationExist(
         if (positionExist) throw new Error("Un jugador del equipo tiene ocupada esta posición");
     });
 
-const position_unique = Validations.isNumeric('position_id', "Una posición es requerida.", true)
-    .isEmail()
-    .bail()
-    .custom(async (value: string, { req }) => {
-        const id  = req.body?.userteam_id;
+const position_unique = Validations.relationExist(
+    'position_id', 
+    'Una posición es requerida.',
+    true, 
+    Position
+    ).bail()
+    .custom(async (value: number, { req }) => {
+        const userteam_id  = req.params?.userteam_id;
         const item = await UserTeam.findOne({
             where: {
-                ...(id && { id: { [Op.ne]: id } }),
-                position_id: { value },
+                ...(userteam_id && { id: { [Op.ne]: userteam_id } }),
+                position_id: value,
             },
         });
-        if (item) throw new Error("Un usuario con esta posición ya está registrado en el equipo");
+        if (item) throw new Error("Un jugador del equipo ya tiene esta posición.");
     });
 
 
@@ -132,7 +136,8 @@ export {
     user_id,
     team_id,
     position_unique,
-    position_id
+    position_id,
+    userteamExist
 }
 
 

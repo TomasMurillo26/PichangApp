@@ -8,7 +8,8 @@ import {
     put, 
     respondRequest, 
     sendTeamrequest, 
-    toggleActivated
+    toggleActivated,
+    deleteUserteam
 } from '../controllers/teams-controllers';
 import { 
     teamExist, 
@@ -16,9 +17,9 @@ import {
     name_unique, 
     sport_id,
     userteamrequest_id,
-    userteam_id,
     user_id,
-    position_id
+    position_unique,
+    userteamExist
 } from '../middlewares/validations/teams-validations';
 import validateError from '../middlewares/validations/error-handler';
 import { verifyToken, checkRole } from '../middlewares/session';
@@ -57,21 +58,29 @@ router.put('/toggle/:id',
     ],
     toggleActivated);
 
-router.put('/changecaptain/:id',
+router.put('/changecaptain/:userteam_id',
     [
         verifyToken,
         checkRole(['Jugador']),
-        teamExist,
-        userteam_id,
+        userteamExist,
         validateError
     ],
     changeCaptain);
 
-router.put('/respondrequest',
+router.delete('/deleteuserteam/:userteam_id',
     [
         verifyToken,
         checkRole(['Jugador']),
-        userteam_id,
+        userteamExist,
+        validateError
+    ],
+    deleteUserteam);
+
+router.put('/respondrequest/:userteam_id',
+    [
+        verifyToken,
+        checkRole(['Jugador']),
+        userteamExist,
         userteamrequest_id,
         validateError
     ],
@@ -87,12 +96,12 @@ router.post('/teamrequest/:id',
     ],
     sendTeamrequest);
 
-router.put('/selectposition',
+router.put('/selectposition/:userteam_id',
     [
         verifyToken,
         checkRole(['Jugador']),
-        position_id,
-        userteam_id,
+        position_unique,
+        userteamExist,
         validateError
     ],
     selectPosition);

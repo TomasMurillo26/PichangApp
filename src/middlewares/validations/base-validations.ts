@@ -57,6 +57,18 @@ const validations = {
             .bail();
     },
 
+    existUserteamInDB: function(Model: any): ValidationChain {
+        return param("userteam_id", "Se debe proveer un id")
+            .isNumeric()
+            .withMessage("El id debe ser un número")
+            .bail()
+            .custom(async (value) => {
+                const query = await Model.findByPk(value);
+                if (!query) throw new Error("El elemento solicitado no existe");
+            })
+            .bail();
+    },
+
     existDBBody: function(Model: any, field: any): ValidationChain {
         return paramAndQuery(field, "Se debe proveer un id")
             .isNumeric()

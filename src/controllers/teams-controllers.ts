@@ -278,15 +278,16 @@ export const toggleActivated = async (req: Request, res: Response) => {
 export const changeCaptain = async (req: Request, res: Response) => {
     const transaction = await db.transaction();
     try{
-        const { id } = req.params;
-        const {
-            userteam_id
-        } = req.body;
+        const { userteam_id } = req.params;
+        //Se busca al usuario que el ya retirado capitán eligió como nuevo capitán
+        const userTeam = await UserTeam.findByPk(userteam_id);
+        
+        if (!userTeam) throw new Error('No existe este jugador');
 
         //Se verifica si es el usuario logeado es capitán del equipo
         const user = await UserTeam.findOne({
             where: { [Op.and]: [
-                {team_id: id},
+                {team_id: userTeam.team_id},
                 {user_id: req.user.id}
             ]}
         });
@@ -304,7 +305,16 @@ export const changeCaptain = async (req: Request, res: Response) => {
             });
         }
 
-        if(user.id === userteam_id){
+        if(userTeam.isCaptain === true){
+            await transaction.rollback();
+
+            return res.status(401).json({
+                status: 401,
+                message: 'Ya eres capitán de este equipo.',
+            });
+        }
+
+        if(user.id === userTeam.user_id){
             await transaction.rollback();
 
             return res.status(401).json({
@@ -315,12 +325,7 @@ export const changeCaptain = async (req: Request, res: Response) => {
 
         /*Si el usuario es capitan, se actualiza el campo isCaptain a false
         ya que deja de ser capitán*/
-        await user?.update({isCaptain: false}, { transaction});
-
-        //Se busca al usuario que el ya retirado capitán eligió como nuevo capitán
-        const userTeam = await UserTeam.findByPk(userteam_id);
-        
-        if (!userTeam) throw new Error('No existe este jugador');
+        await user.update({isCaptain: false}, { transaction});
 
         const team = await Team.findByPk(userTeam.team_id);
 
@@ -425,8 +430,8 @@ export const sendTeamrequest = async (req: Request, res: Response) => {
 export const respondRequest = async (req: Request, res: Response) => {
     const transaction = await db.transaction();
     try{
+        const { userteam_id } = req.params;
         const {
-            userteam_id,
             userteamrequest_id
         } = req.body;
 
@@ -494,8 +499,8 @@ export const respondRequest = async (req: Request, res: Response) => {
 export const selectPosition = async (req: Request, res: Response) => {
     const transaction = await db.transaction();
     try{
+        const { userteam_id } = req.params;
         const {
-            userteam_id,
             position_id
         } = req.body;
 
@@ -536,6 +541,58 @@ export const selectPosition = async (req: Request, res: Response) => {
             status: 200,
             data: [],
             message: `Posición cambiada con éxito.`
+        })
+    }catch (error){
+        console.log(error);
+
+        await transaction.rollback();
+
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error general',
+        });
+    }
+}
+
+export const deleteUserteam = async (req: Request, res: Response) => {
+    const transaction = await db.transaction();
+    try{
+        const { userteam_id } = req.params;
+
+        //Se verifica si el jugador existe en el equipo.
+        const userteam = await UserTeam.findByPk(userteam_id);
+
+        if (!userteam) throw new Error('No existe este jugador');
+
+        //Solo el jugador que pertenece al equipo puede retirarse de el.
+        if(req.user.id !== userteam.user_id){
+            await transaction.rollback();
+
+            return res.status(401).json({
+                status: 401,
+                message: 'No puedes realizar esta acción',
+            });
+        }
+
+        //El capitán no puede abandonar el equipo.
+        if(userteam.isCaptain === true){
+            await transaction.rollback();
+
+            return res.status(401).json({
+                status: 401,
+                message: 'El capitán no puede abandonar el equipo.',
+            });
+        }
+
+        await userteam.destroy({transaction});
+
+        await transaction.commit();
+
+        return res.json({
+            status: 200,
+            data: [],
+            message: 'Jugador eliminado del equipo con éxito'
         })
     }catch (error){
         console.log(error);
