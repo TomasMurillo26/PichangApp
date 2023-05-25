@@ -27,6 +27,16 @@ export const getAll = async (req: Request, res: Response) => {
                         ...(sport_id && {id: sport_id })
                     }
                 },
+                {
+                    model: UserTeam,
+                    attributes: [],
+                    where: {
+                        ...(req.user.roles[0].id === 2 && {
+                            [Op.and]: [{user_id: req.user.id},
+                            {userteamrequest_id: 2}] 
+                        })
+                    }
+                }
             ],
             where:{
                 ...(activated && { activated }),
@@ -108,6 +118,64 @@ export const getOne = async (req: Request, res: Response) => {
         })
     }catch (error){
 
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error general',
+        });
+    }
+}
+
+export const getUserteamRequest = async (req: Request, res: Response) => {
+    try{
+        const elementList = await UserTeam.findAll({
+            attributes: { exclude: ['updatedAt', 'createdAt', 'position_id',
+            'team_id', 'user_id'] },
+            include: 
+            [
+                {
+                    model: Position,
+                    attributes: { exclude: ['updatedAt', 'createdAt', 'sport_id']},
+                },
+                {
+                    model: User,
+                    attributes: { exclude: ['updatedAt', 'createdAt', 
+                    'password', 'email', 'birthday']},
+                },
+                {
+                    model: Team,
+                    attributes: { exclude: ['updatedAt', 'createdAt', 
+                    'captain_id']},
+                    include: [{
+                        model: Sport,
+                        attributes: { exclude: ['updatedAt', 'createdAt', 
+                        'min_players', 'max_players']},
+                    }]
+                },
+                {
+                    model: UserteamRequest,
+                    attributes: [],
+                    where:{
+                        id: 1
+                    },
+                }
+            ],
+            where: {user_id: req.user.id}
+        });
+
+        return elementList.length > 0
+        ? res.json({
+            status: 200,
+            data: elementList,
+            message: 'Get all Teams'
+        })
+        : res.status(404).json({
+            status: 404,
+            data: [],
+            message: 'No se han encontrado resultados'
+        })
+    }catch (error){
+        
         return res.status(500).json({
             status: 500,
             data: {},

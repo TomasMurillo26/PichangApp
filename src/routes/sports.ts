@@ -6,7 +6,8 @@ import {
     sportExist,
     name_unique
 } from '../middlewares/validations/sports-validations';
-import { getAll, getOne, post, put, toggleActivated  } from "../controllers/sports-controllers";
+import { getAll, getOne, post, put, toggleActivated  
+} from "../controllers/sports-controllers";
 import validateError from '../middlewares/validations/error-handler';
 import { verifyToken, checkRole } from '../middlewares/session';
 

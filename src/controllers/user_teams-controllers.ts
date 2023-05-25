@@ -20,7 +20,7 @@ export const getAll = async (req: Request, res: Response) => {
             [
                 {
                     model: Position,
-                    attributes: { exclude: ['updatedAt', 'createdAt']},
+                    attributes: { exclude: ['updatedAt', 'createdAt', 'sport_id']},
                 },
                 {
                     model: User,
@@ -30,7 +30,7 @@ export const getAll = async (req: Request, res: Response) => {
                 {
                     model: Team,
                     attributes: { exclude: ['updatedAt', 'createdAt', 
-                    'createduser_id']},
+                    'captain_id']},
                     where:{
                         ...(team_id && { id: team_id }),
                     },

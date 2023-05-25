@@ -59,7 +59,12 @@ router.put(
         checkRole(['Super Administrador']),
         //Validaciones
         name_unique,
+        longitude,
+        latitude,
+        address,
         groundtype_id,
+        tariff,
+        tariff_required,
         commune_id,
         groundExist,
         validateError

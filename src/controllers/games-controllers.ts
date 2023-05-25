@@ -148,7 +148,7 @@ export const getOne = async (req: Request, res: Response) => {
                 {
                     model: Ground,
                     attributes: { exclude: ['updatedAt', 'createdAt',
-                    'latitude', 'longitude', 'tariff', 'groundtype_id',
+                    'groundtype_id',
                     'commune_id']},
                     include: 
                     [

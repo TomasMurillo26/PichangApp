@@ -9,7 +9,8 @@ import {
     respondRequest, 
     sendTeamrequest, 
     toggleActivated,
-    deleteUserteam
+    deleteUserteam,
+    getUserteamRequest
 } from '../controllers/teams-controllers';
 import { 
     teamExist, 
@@ -28,8 +29,13 @@ const router = Router();
 
 router.get(
     '/',
-    [], 
+    [verifyToken], 
     getAll);
+
+router.get(
+    '/getrequests',
+    [verifyToken], 
+    getUserteamRequest);
 
 router.get(
     '/:id', 
