@@ -42,7 +42,7 @@ export const loginUser = async (req: Request, res: Response) => {
                     user: userDB
                 }, 
                     JWT_SECRET, {
-                    expiresIn: '2h',
+                    expiresIn: '30 days',
             });
 
             return res.status(200).json({

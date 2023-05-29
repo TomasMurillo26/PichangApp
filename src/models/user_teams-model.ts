@@ -3,17 +3,20 @@ import db from '../config/database';
 import User from './users-model';
 import Position from './positions-model';
 import Team from './teams-model';
+import UserteamRequest from './userteamrequests-model';
 
 interface UserTeam extends Model {
-    id: number;
-    isCaptain: boolean;
-    position_id: Position,
-    user_id: User,
-    team_id: Team
+    id: number,
+    isCaptain: boolean,
+    position_id: number,
+    user_id: number,
+    team_id: number,
+    userteamrequest_id: number,
     associations: {
         positions: Association<Position, UserTeam>;
         users: Association<User, UserTeam>;
         teams: Association<Team, UserTeam>;
+        userteamrequests: Association<UserteamRequest, UserTeam>; 
     }
 }
 
@@ -48,14 +51,14 @@ User.hasMany(UserTeam, {
 UserTeam.belongsTo(Position, {
     foreignKey: {
         name: 'position_id',
-        allowNull: false,
+        allowNull: true,
     }
 });
 
 Position.hasMany(UserTeam, {
     foreignKey: {
         name: 'position_id',
-        allowNull: false,
+        allowNull: true,
     }
 });
 
@@ -70,8 +73,22 @@ Team.hasMany(UserTeam, {
     foreignKey: {
         name: 'team_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
 });
 
+UserTeam.belongsTo(UserteamRequest,{
+    foreignKey: {
+        name: 'userteamrequest_id',
+        allowNull: false,
+    },
+})
+
+UserteamRequest.hasMany(UserTeam, {
+    foreignKey: {
+        name: 'userteamrequest_id',
+        allowNull: false,
+    },
+})
 
 export default UserTeam;

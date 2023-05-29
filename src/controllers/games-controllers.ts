@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import db from '../config/database';
-// import { Op } from 'sequelize';
+import { Op } from 'sequelize';
 
 import Sport from '../models/sports-model';
 import Game from '../models/games-model';
@@ -11,6 +11,9 @@ import GameStatus from '../models/gamestatuses-model';
 import Commune from '../models/communes-model';
 import GroundType from '../models/groundtypes-model';
 import Region from '../models/regions-model';
+import UserGame from '../models/user_games-model';
+import UserTeam from '../models/user_teams-model';
+import Team from '../models/teams-model';
 
 export const getAll = async (req: Request, res: Response) => {
     try{
@@ -55,8 +58,7 @@ export const getAll = async (req: Request, res: Response) => {
                 {
                     model: Ground,
                     attributes: { exclude: ['updatedAt', 'createdAt',
-                    'latitude', 'longitude', 'tariff', 'groundtype_id',
-                    'commune_id']},
+                    'latitude', 'longitude', 'tariff', 'groundtype_id']},
                     include: 
                     [
                         {
@@ -72,10 +74,10 @@ export const getAll = async (req: Request, res: Response) => {
                                     model: Region,
                                     attributes: { exclude: ['updatedAt', 'createdAt']},
                                     where: {
-                                        ...( region_id && { id: region_id })
+                                        ...( region_id && { id: region_id }),
                                     }
                                 }
-                            ]
+                            ],...( region_id && { required: true})
                         },
                         {
                             model: GroundType,
@@ -84,12 +86,13 @@ export const getAll = async (req: Request, res: Response) => {
                                 ...( groundtype_id && { id: groundtype_id})
                             }
                         }
-                    ]
-                }
+                    ],...( commune_id && { required: true}),
+                    ...( region_id && { required: true}),
+                },
             ],
             where: {
                 ...( date && { date }) //Revisar
-            }
+            },
         });
 
         return elementList.length > 0
@@ -139,13 +142,13 @@ export const getOne = async (req: Request, res: Response) => {
                 {
                     model: User,
                     attributes: { exclude: ['updatedAt', 'createdAt',
-                    'password', 'email', 'birthday', 'activated', 'nickname',
-                    'profile_image', 'name']},
+                    'password', 'email', 'birthday', 'activated',
+                    'profile_image']},
                 },
                 {
                     model: Ground,
                     attributes: { exclude: ['updatedAt', 'createdAt',
-                    'latitude', 'longitude', 'tariff', 'groundtype_id',
+                    'groundtype_id',
                     'commune_id']},
                     include: 
                     [
@@ -164,6 +167,19 @@ export const getOne = async (req: Request, res: Response) => {
                         {
                             model: GroundType,
                             attributes: { exclude: ['updatedAt', 'createdAt']},
+                        }
+                    ]
+                },
+                {
+                    model: UserGame,
+                    attributes: { exclude: ['updatedAt', 'createdAt', 'game_id', 'user_id']},
+                    include: 
+                    [
+                        {
+                            model: User,
+                            attributes: { exclude: ['updatedAt', 'createdAt',
+                            'password', 'email', 'birthday', 'activated',
+                            'profile_image']},
                         }
                     ]
                 }
@@ -215,6 +231,73 @@ export const post = async (req: Request, res: Response) => {
 
         if(!element) throw new Error('No se pudo crear el partido');
 
+        if(element.gametype_id === 2){
+            //Si el partido es informal, te unes normalmente al partido.
+            const userGame = await UserGame.create({
+                game_id: element.id,
+                user_id: req.user.id
+            }, 
+            { transaction }
+            );
+    
+            if(!userGame) throw new Error('Error al unirse al partido');
+        }else{
+            //Busca el equipo según el deporte e ID del capitan
+            const team = await Team.findOne({
+                where: {
+                    [Op.and]: 
+                    [
+                        {captain_id: req.user.id},
+                        {sport_id}
+                    ]
+                }
+            });
+
+            if (!team){
+                await transaction.rollback();
+
+                return res.status(401).json({
+                    status: 401,
+                    message: 'Solo el capitán puede realizar esta acción.',
+                });
+            };
+            
+            //Se cuenta cuantos jugadores tiene el equipo
+            const userteams = await UserTeam.count({
+                where: { team_id: team.id }
+            });
+
+            /*Si el número de jugadores del equipo es menor que
+            el número de jugadores del juego, retorna un 401*/
+            if (userteams < element.num_players){
+                await transaction.rollback();
+
+                return res.status(401).json({
+                    status: 401,
+                    message: 'No puedes crear un partido formal si no tienes tu equipo completo.',
+                });
+            }
+
+            //Si el equipo está completo, se añade a cada jugador al juego
+            let completeTeam = await UserTeam.findAll({
+                where: { team_id: team.id }
+            });
+
+            completeTeam = JSON.parse(JSON.stringify(completeTeam));
+
+            for(const element of completeTeam){
+                const userGame = await UserGame.create({
+                    game_id: element.id,
+                    user_id: element.user_id,
+                    userteam_id: element.id
+                }, 
+                { transaction }
+                );
+        
+                if(!userGame) throw new Error('Error al unirte como equipo');
+            }
+        }
+        
         await transaction.commit();
 
         return res.json({
@@ -242,20 +325,19 @@ export const put = async (req: Request, res: Response) => {
         const {
             start_hour,
             end_hour,
-            num_players,
-            // createduser_id REQ
         } = req.body as Game;
 
-        const sport = await Game.findByPk(id);
+        const game = await Game.findByPk(id);
         
-        if (!sport) throw new Error('No existe este partido');
+        if (!game) throw new Error('No existe este partido');
 
-        const success = await sport.update(
+        /*Se puede actualizar solamente la hora de comienzo,
+        la hora de fin*/
+        
+        const success = await game.update(
             {
                 start_hour,
                 end_hour,
-                num_players,
-                // createduser_id REQ
             }, 
         { transaction });
 
@@ -279,3 +361,276 @@ export const put = async (req: Request, res: Response) => {
         });
     }
 }
+
+export const enterGame = async (req: Request, res: Response) => {
+    const transaction = await db.transaction();
+    try{
+        const { id } = req.params;
+
+        //Se busca el partido al que se unirá.
+        const game = await Game.findByPk(id);
+
+        if(!game) throw new Error('No existe este partido');
+
+        //Se verifica que el jugador no se haya unido al partido ya.
+        const usergame = await UserGame.findOne({
+            where: { [Op.and]: [
+                {user_id: req.user.id},
+                {game_id: id}
+            ] }
+        });
+
+        if(usergame){
+            await transaction.rollback();
+
+            return res.status(401).json({
+                status: 401,
+                message: 'Ya te uniste a este partido',
+            });
+        }
+
+        //Según el tipo de juego (formal/informal) varía el comportamiento
+        if(game.gametype_id === 1){
+            //Busca el equipo según el deporte e ID del capitan
+            const team = await Team.findOne({
+                where: {
+                    [Op.and]: 
+                    [
+                        {captain_id: req.user.id},
+                        {sport_id: game.sport_id}
+                    ]
+                }
+            });
+
+            //Si el usuario no es capitán retorna un 401
+            if (!team){
+                await transaction.rollback();
+
+                return res.status(401).json({
+                    status: 401,
+                    message: 'Solo el capitán puede realizar esta acción.',
+                });
+            };
+
+            //Se cuenta cuantos jugadores tiene el equipo
+            const userteams = await UserTeam.count({
+                where: { team_id: team.id }
+            });
+
+            /*Si el número de jugadores del equipo es menor que
+            el número de jugadores del juego, retorna un 401*/
+            if (userteams < game.num_players){
+                await transaction.rollback();
+
+                return res.status(401).json({
+                    status: 401,
+                    message: 'No puedes unirte a un partido formal si no tienes tu equipo completo.',
+                });
+            }
+
+            //Si el equipo está completo, se añade a cada jugador al juego
+            let completeTeam = await UserTeam.findAll({
+                where: { team_id: team.id }
+            });
+
+            completeTeam = JSON.parse(JSON.stringify(completeTeam));
+
+            for(const element of completeTeam){
+                const userGame = await UserGame.create({
+                    game_id: element.id,
+                    user_id: element.user_id,
+                    userteam_id: element.id
+                }, 
+                { transaction }
+                );
+        
+                if(!userGame) throw new Error('Error al unirte como equipo');
+            }
+        }else{
+            //Si no se ha unido todavía, procede a unirse al partido.
+            const element = await UserGame.create({
+                game_id: id,
+                user_id: req.user.id
+            }, 
+            { transaction }
+            );
+
+            if(!element) throw new Error('No pudiste entrar al partido');
+        }
+        
+        /*Si el número de jugadores que hay en el partido y
+        el número de jugadores del partido son el mismo
+        el partido cambia de estado a "EN PROCESO" y no debiese dejar
+        unirse a más personas.*/
+        const count = await UserGame.count({
+            where: {game_id: id}
+        });
+
+        if(count === game.num_players ){
+            const success = await game.update(
+                {
+                    gamestatus_id: 2
+                }, 
+            { transaction });
+    
+            if(!success) throw new Error('No se pudo actualizar el partido');
+        }
+
+        await transaction.commit();
+
+        return res.json({
+            status: 200,
+            data: [],
+            message: 'Entraste al partido con éxito'
+        })
+    }catch (error){
+        console.log(error);
+
+        await transaction.rollback();
+
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error general',
+        });
+    }
+}
+
+export const leaveGame = async (req: Request, res: Response) => {
+    const transaction = await db.transaction();
+    try{
+        const { id } = req.params;
+
+        //Se busca el partido por su ID
+        const game = await Game.findByPk(id);
+
+        if(!game) throw new Error('No existe este partido');
+
+        const user = await UserGame.findOne({
+            where: {[Op.and]: [
+                {game_id: id},
+                {user_id: req.user.id}
+            ]}
+        });
+
+        //Si no existe este jugador en este partido, lanza un 400
+        if(!user){
+            await transaction.rollback();
+
+            return res.status(400).json({
+                status: 400,
+                data: [],
+                message: 'No formas parte de este partido.',
+            });
+        }
+
+        if(game.gametype_id === 1){
+             //Busca el equipo según el deporte e ID del capitan
+            const team = await Team.findOne({
+                where: {
+                    [Op.and]: 
+                    [
+                        {captain_id: req.user.id},
+                        {sport_id: game.sport_id}
+                    ]
+                }
+            });
+
+            //Si el usuario no es capitán retorna un 401
+            if (!team){
+                await transaction.rollback();
+
+                return res.status(401).json({
+                    status: 401,
+                    message: 'Solo el capitán puede realizar esta acción.',
+                });
+            };
+            
+            //Si el equipo está completo, se añade a cada jugador al juego
+            let completeTeam = await UserTeam.findAll({
+                where: { team_id: team.id }
+            });
+
+            completeTeam = JSON.parse(JSON.stringify(completeTeam));
+
+            //Se elimina a cada miembro del equipo del partido
+            for(const element of completeTeam){
+
+                const userGame = await UserGame.findOne({
+                    where: {[Op.and]: [
+                        {userteam_id: element.id}, 
+                        {game_id: id}
+                    ]}
+                });
+
+                if(!userGame) throw new Error('Error al abandonar el partido');
+
+                await userGame.destroy({ transaction });
+            }
+
+        }else{
+            //Se busca al jugador por su ID y el ID del partido
+            const userGame = await UserGame.findOne({
+                where: { [Op.and]: [
+                    {game_id: id}, 
+                    {user_id: req.user.id}
+                ]}
+            });
+
+            if (!userGame) throw new Error('No existe este jugador');
+
+            //Se elimina al jugador
+            await userGame.destroy({ transaction });
+        }
+
+        /*Si el jugador que se sale del partido es el creador del mismo
+        el partido se elimina*/
+        if(game?.createduser_id === req.user.id){
+            await game?.destroy({ transaction });
+
+            await transaction.commit();
+
+            return res.json({
+                status: 200,
+                data: [],
+                message: 'El partido se eliminó con éxito'
+            })
+        }
+
+        //Se cuenta cuantos jugadores hay en el partido
+        const count = await UserGame.count({
+            where: {game_id: id}
+        });
+
+        /*Si al abandonar el partido, la cuenta es menor 
+        al número de jugadores, el partido cambia de estado a
+        'EN ESPERA' */
+        if(count < game.num_players ){
+            const success = await game.update(
+                {
+                    gamestatus_id: 1
+                }, 
+            { transaction });
+    
+            if(!success) throw new Error('No se pudo actualizar el partido');
+        }
+
+        await transaction.commit();
+
+        return res.json({
+            status: 200,
+            data: [],
+            message: 'Abandonaste el partido con éxito'
+        })
+    }catch (error){
+        console.log(error);
+
+        await transaction.rollback();
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error general',
+        });
+    }
+}
+

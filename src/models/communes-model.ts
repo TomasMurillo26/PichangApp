@@ -3,9 +3,9 @@ import db from '../config/database';
 import Region from './regions-model';
 
 interface Commune extends Model {
-    id: number;
-    name: string;
-    region_id: Region,
+    id: number,
+    name: string,
+    region_id: number,
     associations: {
         regions: Association<Region, Commune>;
     }
@@ -35,7 +35,8 @@ Region.hasMany(Commune, {
     foreignKey: {
         name: 'region_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
 })
 
 export default Commune;

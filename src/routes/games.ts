@@ -11,9 +11,9 @@ import {
     start_hour,
     end_hour,
     gameExist,
-    createduser_id
+    createduser_id,
 } from '../middlewares/validations/games-validations';
-import { getAll, getOne, post, put  } from "../controllers/games-controllers";
+import { enterGame, getAll, getOne, leaveGame, post, put  } from "../controllers/games-controllers";
 import validateError from '../middlewares/validations/error-handler';
 import { verifyToken, checkRole } from '../middlewares/session';
 
@@ -57,6 +57,18 @@ router.post(
     post
 );
 
+router.post(
+    '/:id', 
+    [
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
+        gameExist,
+        validateError
+    ],
+    enterGame
+);
+
 router.put(
     '/:id',
     [
@@ -65,12 +77,22 @@ router.put(
         // Validaciones
         start_hour,
         end_hour,
-        date,
-        num_players,
         gameExist,
         validateError
     ],
     put
+);
+
+router.delete(
+    '/:id', 
+    [
+        verifyToken,
+        checkRole(['Jugador']),
+        // Validaciones
+        gameExist,
+        validateError
+    ],
+    leaveGame
 );
 
 export default router;

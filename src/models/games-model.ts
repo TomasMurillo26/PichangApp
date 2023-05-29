@@ -8,16 +8,16 @@ import User from './users-model';
 import GameStatus from './gamestatuses-model';
 
 interface Game extends Model {
-    id: number;
+    id: number,
     start_hour: Date,
     end_hour: Date,
     date: Date,
     num_players: number,
-    sport_id: Sport,
-    ground_id: Ground,
-    gametype_id: GameType,
-    createduser_id: User,
-    gamestatus_id: GameStatus,
+    sport_id: number,
+    ground_id: number,
+    gametype_id: number,
+    createduser_id: number,
+    gamestatus_id: number,
     associations: {
         users: Association<User, Game>;
         sports: Association<Sport, Game>;
@@ -119,7 +119,10 @@ User.hasMany(Game, {
     foreignKey: {
         name: 'createduser_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
 });
+
+
 
 export default Game;

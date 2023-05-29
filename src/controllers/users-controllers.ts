@@ -141,10 +141,7 @@ export const put = async (req: Request, res: Response) => {
         const {
             name,
             nickname,
-            password,
-            email,
             birthday,
-            role_id,
             //profile_image
         } = req.body as User;
 
@@ -152,28 +149,30 @@ export const put = async (req: Request, res: Response) => {
         
         if (!user) throw new Error('No existe este usuario');
 
+        if(user.id !== req.user.id){
+            return res.status(401).json({
+                status: 401,
+                message: 'No puedes editar el perfil de otro usuario.',
+            });
+        }
+
         const success = await user.update(
             {
                 name,
                 nickname,
-                password,
-                email,
                 birthday,
-                role_id,
                 //profile_image
             }, 
         { transaction });
 
         if(!success) throw new Error('No se pudo actualizar este usuario');
 
-        await user.setRoles([role_id], { transaction });
-
         await transaction.commit();
 
         return res.json({
             status: 200,
             data: [],
-            message: 'Usuario actualizado con éxito'
+            message: 'Tu información ha sido actualizada con éxito'
         })
     }catch (error){
         console.log(error);

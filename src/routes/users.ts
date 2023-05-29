@@ -36,8 +36,8 @@ router.get(
 
 router.post('/',
     [
-        verifyToken,
-        checkRole(['Super Administrador']),
+        // verifyToken,
+        // checkRole(['Super Administrador']),
         // Validaciones
         email,
         role_id,

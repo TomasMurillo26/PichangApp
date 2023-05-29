@@ -4,11 +4,11 @@ import Sport from './sports-model';
 import User from './users-model';
 
 interface Team extends Model {
-    id: number;
-    name: string;
-    activated: boolean;
-    sport_id: Sport,
-    createduser_id: User,
+    id: number,
+    name: string,
+    activated: boolean,
+    sport_id: number,
+    captain_id: number,
     associations: {
         sports: Association<Sport, Team>;
         users: Association<User, Team>;
@@ -35,14 +35,14 @@ const Team = db.define<Team>('Team',{
 
 Team.belongsTo(User, {
     foreignKey: {
-        name: 'createduser_id',
+        name: 'captain_id',
         allowNull: false,
     }
 });
 
 User.hasMany(Team, {
     foreignKey: {
-        name: 'createduser_id',
+        name: 'captain_id',
         allowNull: false,
     }
 });
@@ -58,7 +58,9 @@ Sport.hasMany(Team, {
     foreignKey: {
         name: 'sport_id',
         allowNull: false,
-    }
+    },
+    onDelete: 'cascade'
+
 });
 
 

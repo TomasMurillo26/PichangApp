@@ -7,10 +7,11 @@ import Position from '../models/positions-model';
 import Team from '../models/teams-model';
 import User from '../models/users-model';
 import Sport from '../models/sports-model';
+import UserteamRequest from '../models/userteamrequests-model';
 
 export const getAll = async (req: Request, res: Response) => {
     try{
-        const { team_id } = req.query;
+        const { team_id, userteamrequest_id } = req.query;
 
         const elementList = await UserTeam.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt', 'position_id',
@@ -19,7 +20,7 @@ export const getAll = async (req: Request, res: Response) => {
             [
                 {
                     model: Position,
-                    attributes: { exclude: ['updatedAt', 'createdAt']},
+                    attributes: { exclude: ['updatedAt', 'createdAt', 'sport_id']},
                 },
                 {
                     model: User,
@@ -29,7 +30,7 @@ export const getAll = async (req: Request, res: Response) => {
                 {
                     model: Team,
                     attributes: { exclude: ['updatedAt', 'createdAt', 
-                    'createduser_id']},
+                    'captain_id']},
                     where:{
                         ...(team_id && { id: team_id }),
                     },
@@ -38,6 +39,13 @@ export const getAll = async (req: Request, res: Response) => {
                         attributes: { exclude: ['updatedAt', 'createdAt', 
                         'min_players', 'max_players']},
                     }]
+                },
+                {
+                    model: UserteamRequest,
+                    attributes: [],
+                    where:{
+                        ...(userteamrequest_id && { id: userteamrequest_id  }),
+                    },
                 }
             ],
         });

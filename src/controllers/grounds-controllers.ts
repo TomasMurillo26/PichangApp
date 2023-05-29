@@ -170,7 +170,7 @@ export const put = async (req: Request, res: Response) => {
             longitude,
             commune_id,
             groundtype_id,
-            // tariff
+            tariff
         } = req.body as Ground;
 
         const ground = await Ground.findByPk(id);
@@ -185,7 +185,7 @@ export const put = async (req: Request, res: Response) => {
                 longitude,
                 commune_id,
                 groundtype_id,
-                // tariff
+                tariff
             }, 
         { transaction });
 

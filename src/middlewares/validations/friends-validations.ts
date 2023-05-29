@@ -3,33 +3,49 @@ import { Op } from "sequelize";
 
 import Friend from "../../models/friends-model";
 import User from "../../models/users-model";
+import FriendRequestStatus from "../../models/friendrequeststatus-model";
 
-const friend_id = Validations.relationExist(
-    'friend_id',
+const nickname = Validations.string(
+    'nickname',
     'Este campo es requerido',
-    true,
-    User
-).custom(async (value: number) => {
-    // const id = req.params?.id;
+    true
+).custom(async (value: string, { req }) => {
+    const user = await User.findOne({
+        where: {
+            nickname: value
+        }
+    });
+
+    if (!user) {
+        throw Error('No existe un jugador con este nick.');
+    }
+
     const exist = await Friend.findOne(
         { 
             where: 
             { 
                 [Op.and]: 
                 [
-                    // { user_id },
-                    { friend_id: value },
-
+                    { user_id: req.user.id },
+                    { friend_id: user.id },
                 ]
             } 
         });
+
     if (exist) {
-    throw Error('Ya tienes agregado a este amigo');
+    throw Error('Ya tienes agregado a este jugador');
     }
 });
 
+const friendrequest_id = Validations.relationExist(
+    'friendrequest_id',
+    'Este campo es requerido',
+    true,
+    FriendRequestStatus
+)
+
 const friendExist = Validations.existInDB(Friend);
 
-export { friend_id, friendExist }
+export { nickname, friendExist, friendrequest_id }
 
 

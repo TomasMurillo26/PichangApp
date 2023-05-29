@@ -2,12 +2,12 @@ import { DataTypes, Model } from 'sequelize';
 import db from '../config/database';
 
 interface Sport extends Model {
-    id: number;
-    name: string;
-    max_players: number;
-    min_players: number;
-    icon_path: string;
-    activated: boolean;
+    id: number,
+    name: string,
+    max_players: number,
+    min_players: number,
+    icon_path: string,
+    activated: boolean
 }
 
 const Sport = db.define<Sport>('Sport',{
