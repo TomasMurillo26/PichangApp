@@ -9,7 +9,7 @@ interface Friend extends Model {
     friend_id: number,
     user_id: number,
     activated: boolean,
-    requeststatus_id: number,
+    friendrequest_id: number,
     associations: {
         friends: Association<User, Friend>;
         users: Association<User, Friend>;

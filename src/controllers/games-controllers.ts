@@ -58,8 +58,7 @@ export const getAll = async (req: Request, res: Response) => {
                 {
                     model: Ground,
                     attributes: { exclude: ['updatedAt', 'createdAt',
-                    'latitude', 'longitude', 'tariff', 'groundtype_id',
-                    'commune_id']},
+                    'latitude', 'longitude', 'tariff', 'groundtype_id']},
                     include: 
                     [
                         {
@@ -75,10 +74,10 @@ export const getAll = async (req: Request, res: Response) => {
                                     model: Region,
                                     attributes: { exclude: ['updatedAt', 'createdAt']},
                                     where: {
-                                        ...( region_id && { id: region_id })
+                                        ...( region_id && { id: region_id }),
                                     }
                                 }
-                            ]
+                            ],...( region_id && { required: true})
                         },
                         {
                             model: GroundType,
@@ -87,12 +86,13 @@ export const getAll = async (req: Request, res: Response) => {
                                 ...( groundtype_id && { id: groundtype_id})
                             }
                         }
-                    ]
-                }
+                    ],...( commune_id && { required: true}),
+                    ...( region_id && { required: true}),
+                },
             ],
             where: {
                 ...( date && { date }) //Revisar
-            }
+            },
         });
 
         return elementList.length > 0

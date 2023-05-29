@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { 
     nickname,
-    friendExist
+    friendExist,
+    friendrequest_id
 } from '../middlewares/validations/friends-validations';
-import { getAll, getOne, post, put, toggleActivated  
+import { getAll, getOne, post, respondFriendrequest, toggleActivated  
 } from "../controllers/friends-controllers";
 import validateError from '../middlewares/validations/error-handler';
 import { verifyToken, checkRole } from '../middlewares/session';
@@ -44,11 +45,11 @@ router.put(
         verifyToken,
         checkRole(['Jugador']),
         // Validaciones
-        nickname,
         friendExist,
+        friendrequest_id,
         validateError
     ],
-    put
+    respondFriendrequest
 );
 
 router.put(

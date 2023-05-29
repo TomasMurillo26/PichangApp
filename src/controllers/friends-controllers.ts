@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import db from '../config/database';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 
 import Friend from '../models/friends-model';
 import User from '../models/users-model';
@@ -9,18 +9,23 @@ import FriendRequestStatus from '../models/friendrequeststatus-model';
 
 export const getAll = async (req: Request, res: Response) => {
     try{
-        const { activated } = req.query;
+        const { activated, friendrequeststatus_id } = req.query;
 
         let users = await Friend.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt',
-            'user_id', 'friend_id', 'friendrequest_id'] },
+            'user_id', 'friend_id', 'friendrequest_id'],
+            include: [
+                [Sequelize.literal('friends.name'), 'name'],
+                [Sequelize.literal('friends.nickname'), 'nickname'],
+                [Sequelize.literal('friends.id'), 'user_id']
+            ] 
+        },
             include: 
             [
                 {
                     model: User,
                     as: 'friends',
-                    attributes: { exclude: ['updatedAt', 'createdAt', 'password',
-                    'profile_image', 'email', 'birthday'] },
+                    attributes: []
                 },
                 {
                     model: User,
@@ -34,24 +39,33 @@ export const getAll = async (req: Request, res: Response) => {
                 {
                     model: FriendRequestStatus,
                     attributes: { exclude: ['updatedAt', 'createdAt']},
-                    where: { id: 1 }
+                    where: { 
+                        ...(friendrequeststatus_id && { id: friendrequeststatus_id }),
+                        ...(!friendrequeststatus_id && { id: 1 })    
+                    }
                 }
             ],
             where:{
                 ...(activated && { activated }),
-            },
+            },        
         });
+
 
         let friends = await Friend.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt',
-            'user_id', 'friend_id', 'friendrequest_id'] },
+            'user_id', 'friend_id', 'friendrequest_id'],
+            include: [
+                [Sequelize.literal('users.name'), 'name'],
+                [Sequelize.literal('users.nickname'), 'nickname'],
+                [Sequelize.literal('users.id'), 'user_id']
+            ] 
+        },
             include: 
             [
                 {
                     model: User,
                     as: 'users',
-                    attributes: { exclude: ['updatedAt', 'createdAt', 'password',
-                    'profile_image', 'email', 'birthday'] }
+                    attributes: []
                 },
                 {
                     model: User,
@@ -64,12 +78,15 @@ export const getAll = async (req: Request, res: Response) => {
                 {
                     model: FriendRequestStatus,
                     attributes: { exclude: ['updatedAt', 'createdAt']},
-                    where: { id: 1 }
+                    where: {
+                        ...(friendrequeststatus_id && { id: friendrequeststatus_id }),
+                        ...(!friendrequeststatus_id && { id: 1 }) 
+                    }
                 }
             ],
             where:{
                 ...(activated && { activated }),
-            }
+            },
         });
 
         let elementList = users.concat(friends);
@@ -159,6 +176,10 @@ export const post = async (req: Request, res: Response) => {
         //constante
         const friend_id = user.id;
 
+        const userReq = await User.findByPk(req.user.id);
+
+        if(!userReq) throw new Error('Este usuario no existe');
+
         //Se verifica si el usuario que envía la solicitud de
         //amigo posee una solicitud del usuario que va a agregar.
         const existFriend = await Friend.findOne({
@@ -171,6 +192,15 @@ export const post = async (req: Request, res: Response) => {
                 ]
             } 
         });
+
+        if(user.nickname === userReq.nickname){
+            await transaction.rollback();
+
+            return res.status(401).json({
+                status: 401,
+                message: 'No puedes enviar una solicitud a ti mismo',
+            });
+        }
 
         //Si el usuario existe se cancela la transacción.
         if(existFriend){
@@ -215,48 +245,6 @@ export const post = async (req: Request, res: Response) => {
     }
 }
 
-export const put = async (req: Request, res: Response) => {
-    const transaction = await db.transaction();
-    try{
-        const { id } = req.params;
-        const {
-            friend_id
-        } = req.body as Friend;
-
-        const friend = await Friend.findByPk(id);
-        
-        if (!friend) throw new Error('No existe este amigo');
-
-        const success = await friend.update(
-            {
-                // user_id,
-                friend_id,
-                requeststatus_id: 2,
-                activated: false
-            }, 
-        { transaction });
-
-        if(!success) throw new Error('No se pudo actualizar este amigo');
-
-        await transaction.commit();
-
-        return res.json({
-            status: 200,
-            data: [],
-            message: 'Amigo actualizado con éxito'
-        })
-    }catch (error){
-        console.log(error);
-
-        await transaction.rollback();
-        return res.status(500).json({
-            status: 500,
-            data: {},
-            message: 'Error general',
-        });
-    }
-}
-
 export const toggleActivated = async (req: Request, res: Response) => {
     const transaction = await db.transaction();
     try{
@@ -265,6 +253,15 @@ export const toggleActivated = async (req: Request, res: Response) => {
         const friend = await Friend.findByPk(id);
         
         if (!friend) throw new Error('No existe este amigo');
+
+        if(friend.friend_id !== req.user.id && friend.user_id !== req.user.id){
+            await transaction.rollback();
+
+            return res.status(401).json({
+                status: 401,
+                message: 'No puedes realizar esta acción',
+            });
+        }
 
         if(friend.activated){
             await friend.update({activated: false}, { transaction });
@@ -280,6 +277,83 @@ export const toggleActivated = async (req: Request, res: Response) => {
             status: 200,
             data: [],
             message: 'Amigo actualizado'
+        })
+    }catch (error){
+        console.log(error);
+
+        await transaction.rollback();
+
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error general',
+        });
+    }
+}
+
+export const respondFriendrequest = async (req: Request, res: Response) => {
+    const transaction = await db.transaction();
+    try{
+        const { id } = req.params;
+        const {
+            friendrequest_id
+        } = req.body;
+
+        //Se busca si el amigo que existe
+        const friend = await Friend.findByPk(id);
+        
+        if (!friend) throw new Error('No existe este amigo');
+
+        //Si el usuario que responde no es el mismo al que fue
+        //enviada la solcitud, regresa este mensaje.
+        if(friend.friend_id !== req.user.id){
+            await transaction.rollback();
+
+            return res.status(401).json({
+                status: 401,
+                message: 'No puedes realizar esta acción',
+            });
+        }
+
+        //Si la solicitud ya fue aceptada, regresa este mensaje
+        if(friend.friendrequest_id === 1){
+            await transaction.rollback();
+
+            return res.status(401).json({
+                status: 401,
+                message: 'Esta solicitud ya fue aceptada',
+            });
+        }
+
+        if(friendrequest_id === 1){
+            //La solicitud aceptada es actualizada
+            const success = await friend.update(
+                {
+                    friendrequest_id,
+                    activated: true
+                }, 
+            { transaction });
+    
+            if(!success) throw new Error('No se pudo actualizar este amigo');
+        }else if(friendrequest_id === 3){
+            //La solicitud rechazada es borrada
+            await friend.destroy({transaction});
+
+            await transaction.commit();
+    
+            return res.json({
+                status: 200,
+                data: [],
+                message: 'Solicitud rechazada con éxito.'
+            })
+        }
+
+        await transaction.commit();
+
+        return res.json({
+            status: 200,
+            data: [],
+            message: 'Solicitud aceptada con éxito'
         })
     }catch (error){
         console.log(error);

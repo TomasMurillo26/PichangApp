@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 
 import Friend from "../../models/friends-model";
 import User from "../../models/users-model";
+import FriendRequestStatus from "../../models/friendrequeststatus-model";
 
 const nickname = Validations.string(
     'nickname',
@@ -36,8 +37,15 @@ const nickname = Validations.string(
     }
 });
 
+const friendrequest_id = Validations.relationExist(
+    'friendrequest_id',
+    'Este campo es requerido',
+    true,
+    FriendRequestStatus
+)
+
 const friendExist = Validations.existInDB(Friend);
 
-export { nickname, friendExist }
+export { nickname, friendExist, friendrequest_id }
 
 

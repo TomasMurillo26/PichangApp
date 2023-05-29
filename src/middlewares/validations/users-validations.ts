@@ -2,6 +2,7 @@ import Validations from "./base-validations";
 import User from "../../models/users-model";
 import { Op } from "sequelize";
 import Role from "../../models/roles-model";
+import moment from "moment";
 
 const name = Validations.string('name', 'Este campo es requerido', true)
     .trim()
@@ -58,8 +59,17 @@ const birthday = Validations.string(
     "birthday", 
     "La fecha de nacimiento es requerida.",
     true)
-    .isDate({ format: 'YYYY-MM-DD', strictMode: true, delimiters: ['-'] })
-    .withMessage('La fecha no tiene el formato adecuado.');
+    .custom((value) => {
+        if (!moment(value, 'YYYY-MM-DD', true).isValid()) {
+            throw new Error('La fecha no tiene el formato adecuado.');
+        }
+        if(!moment(value).isBefore(moment(), 'day')){
+            throw new Error('La fecha de nacimiento debe ser anterior a la fecha actual.')
+        }
+
+        return true;
+    })
+    ;
 
 const email_unique = Validations.string("email", "Un Email es requerido.", true)
     .isEmail()
