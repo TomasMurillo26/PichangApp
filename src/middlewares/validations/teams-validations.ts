@@ -53,7 +53,7 @@ const sport_id = Validations.relationExist(
 ).custom(async (value: number, { req }) => {
         const team = await Team.findOne({
         where: {
-            [Op.and]: [{sport_id: value},{createduser_id: req.user.id}]
+            [Op.and]: [{sport_id: value},{captain_id: req.user.id}]
         },
     });
     if (team) throw new Error('Ya tienes un equipo para este deporte');
