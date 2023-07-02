@@ -209,3 +209,40 @@ export const put = async (req: Request, res: Response) => {
         });
     }
 }
+
+export const toggleActivated = async (req: Request, res: Response) => {
+    const transaction = await db.transaction();
+    try{
+        const { id } = req.params;
+
+        const ground = await Ground.findByPk(id);
+        
+        if (!ground) throw new Error('No existe esta cancha');
+
+        if(ground.activated){
+            await ground.update({activated: false}, { transaction });
+        }else{
+            await ground.update({activated: true}, { transaction });
+        }
+
+        await transaction.commit();
+
+        await ground.reload();
+
+        return res.json({
+            status: 200,
+            data: [],
+            message: 'Estado de la cancha actualizado'
+        })
+    }catch (error){
+        console.log(error);
+
+        await transaction.rollback();
+
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error general',
+        });
+    }
+}

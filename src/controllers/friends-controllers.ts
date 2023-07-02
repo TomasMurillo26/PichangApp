@@ -25,7 +25,11 @@ export const getAll = async (req: Request, res: Response) => {
                 {
                     model: User,
                     as: 'friends',
-                    attributes: []
+                    attributes: [],
+                    where: 
+                    {
+                        ...(friendrequeststatus_id === '2' && {id: {[Op.ne]: req.user.id}})
+                    }
                 },
                 {
                     model: User,
@@ -33,7 +37,8 @@ export const getAll = async (req: Request, res: Response) => {
                     attributes: [],
                     where: 
                     {
-                        id: req.user.id
+                        ...(friendrequeststatus_id === '1' && {id: req.user.id}),
+                        ...(friendrequeststatus_id === '2' && {id: {[Op.ne]: req.user.id}})
                     }
                 },
                 {
@@ -50,6 +55,7 @@ export const getAll = async (req: Request, res: Response) => {
             },        
         });
 
+        console.log(users);
 
         let friends = await Friend.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt',

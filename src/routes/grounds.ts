@@ -11,7 +11,7 @@ import {
     tariff,
     tariff_required
 } from '../middlewares/validations/grounds-validations';
-import { getAll, getOne, post, put } from "../controllers/grounds-controllers";
+import { getAll, getOne, post, put, toggleActivated } from "../controllers/grounds-controllers";
 import validateError from '../middlewares/validations/error-handler';
 import { verifyToken, checkRole } from '../middlewares/session';
 
@@ -70,6 +70,18 @@ router.put(
         validateError
     ],
     put
+);
+
+router.put(
+    '/toggle/:id',
+    [
+        verifyToken,
+        checkRole(['Super Administrador']),
+        // Validaciones
+        groundExist,
+        validateError
+    ], 
+    toggleActivated
 );
 
 export default router;

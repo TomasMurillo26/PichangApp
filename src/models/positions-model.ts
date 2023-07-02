@@ -6,6 +6,7 @@ interface Position extends Model {
     id: number,
     name: string,
     sport_id: number,
+    activated: boolean,
     associations: {
         sports: Association<Sport, Position>;
     }
@@ -20,6 +21,11 @@ const Position = db.define<Position>('Position',{
     },
     name: {
         type: DataTypes.STRING(150),
+        allowNull: false
+    },
+    activated: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
         allowNull: false
     }
 });
