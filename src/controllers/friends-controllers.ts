@@ -11,13 +11,16 @@ export const getAll = async (req: Request, res: Response) => {
     try{
         const { activated, friendrequeststatus_id } = req.query;
 
+        console.log('IDDDD: ',req.user.id);
+
         let users = await Friend.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt',
             'user_id', 'friend_id', 'friendrequest_id'],
             include: [
                 [Sequelize.literal('friends.name'), 'name'],
                 [Sequelize.literal('friends.nickname'), 'nickname'],
-                [Sequelize.literal('friends.id'), 'user_id']
+                [Sequelize.literal('users.id'), 'user_id'],
+                [Sequelize.literal('friends.id'), 'friend_id']
             ] 
         },
             include: 
@@ -26,10 +29,10 @@ export const getAll = async (req: Request, res: Response) => {
                     model: User,
                     as: 'friends',
                     attributes: [],
-                    where: 
-                    {
-                        ...(friendrequeststatus_id === '2' && {id: {[Op.ne]: req.user.id}})
-                    }
+                    // where: 
+                    // {
+                    //     ...(friendrequeststatus_id === '2' && {id: {[Op.ne]: req.user.id}})
+                    // }
                 },
                 {
                     model: User,
@@ -37,8 +40,11 @@ export const getAll = async (req: Request, res: Response) => {
                     attributes: [],
                     where: 
                     {
-                        ...(friendrequeststatus_id === '1' && {id: req.user.id}),
-                        ...(friendrequeststatus_id === '2' && {id: {[Op.ne]: req.user.id}})
+                        ...(friendrequeststatus_id === '2' && {
+                            id: {
+                                [Op.not]: req.user.id
+                            }
+                        })
                     }
                 },
                 {
@@ -55,7 +61,15 @@ export const getAll = async (req: Request, res: Response) => {
             },        
         });
 
-        console.log(users);
+        users = JSON.parse(JSON.stringify(users));
+
+        for(const i of users){
+            if(req.user.id !== i.user_id){
+                users = [];
+            }
+        }
+
+
 
         let friends = await Friend.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt',
@@ -63,7 +77,7 @@ export const getAll = async (req: Request, res: Response) => {
             include: [
                 [Sequelize.literal('users.name'), 'name'],
                 [Sequelize.literal('users.nickname'), 'nickname'],
-                [Sequelize.literal('users.id'), 'user_id']
+                [Sequelize.literal('users.id'), 'friend_id']
             ] 
         },
             include: 

@@ -28,7 +28,7 @@ db.authenticate()
         console.error("Unable to connect to the database:", err);
     });
 
-db.sync({ alter: true }).then(() => {
+db.sync({ alter: false }).then(() => {
     console.log('SYNC OK!');
 });
 
