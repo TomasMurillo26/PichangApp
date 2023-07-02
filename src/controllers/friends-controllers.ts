@@ -11,8 +11,6 @@ export const getAll = async (req: Request, res: Response) => {
     try{
         const { activated, friendrequeststatus_id } = req.query;
 
-        console.log('IDDDD: ',req.user.id);
-
         let users = await Friend.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt',
             'user_id', 'friend_id', 'friendrequest_id'],
@@ -68,8 +66,6 @@ export const getAll = async (req: Request, res: Response) => {
                 users = [];
             }
         }
-
-
 
         let friends = await Friend.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt',
