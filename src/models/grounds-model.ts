@@ -12,6 +12,7 @@ interface Ground extends Model {
     tariff: number,
     groundtype_id: number,
     commune_id: number,
+    activated: boolean,
     associations: {
         groundtypes: Association<GroundType, Ground>;
         communes: Association<Commune, Ground>;
@@ -45,6 +46,11 @@ const Ground = db.define<Ground>('Ground',{
         type: DataTypes.INTEGER,
         allowNull: true,
     },
+    activated: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        allowNull: false
+    }
 });
 
 Ground.belongsTo(Commune, {

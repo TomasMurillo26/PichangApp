@@ -13,8 +13,8 @@ export const getAll = async (req: Request, res: Response) => {
     try{
         const { sport_name, sport_id, team_name, activated } = req.query;
 
-        const elementList = await Team.findAll({
-            attributes: { exclude: ['updatedAt', 'createdAt', 'sport_id',
+        let elementList = await Team.findAll({
+            attributes: { exclude: ['updatedAt', 'createdAt',
             'createduser_id'] },
             include: 
             [
@@ -43,6 +43,28 @@ export const getAll = async (req: Request, res: Response) => {
                 ...(team_name && {name: {[Op.like]: team_name} }),
             }
         });
+
+        elementList = JSON.parse(JSON.stringify(elementList));
+
+        for(const i of elementList){
+            let sport = await Sport.findByPk(i.sport_id);
+
+            if(!sport) throw new Error('No se encontró un deporte');
+
+            const userteams = await UserTeam.count({
+                where: {
+                    team_id: i.id 
+                }
+            });
+
+            /*Si el equipo está completo, full = true
+            Sino es false*/
+            if(userteams < sport.max_players){
+                i.full = false;
+            }else{
+                i.full = true;
+            }
+        }
 
         return elementList.length > 0
         ? res.json({
@@ -449,7 +471,7 @@ export const sendTeamrequest = async (req: Request, res: Response) => {
 
             return res.status(401).json({
                 status: 401,
-                message: 'Ya formas parte de este equipo.',
+                message: 'Este jugador ya forma parte de este equipo.',
             });
         }
 
@@ -459,7 +481,7 @@ export const sendTeamrequest = async (req: Request, res: Response) => {
 
             return res.status(401).json({
                 status: 401,
-                message: 'Ya enviaste una solicitud a este usuario.',
+                message: 'Ya enviaste una solicitud a este jugador.',
             });
         }
 
@@ -660,7 +682,7 @@ export const deleteUserteam = async (req: Request, res: Response) => {
         return res.json({
             status: 200,
             data: [],
-            message: 'Jugador eliminado del equipo con éxito'
+            message: 'Abandonaste el equipo con éxito'
         })
     }catch (error){
         console.log(error);

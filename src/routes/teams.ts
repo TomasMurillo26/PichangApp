@@ -19,8 +19,8 @@ import {
     sport_id,
     userteamrequest_id,
     user_id,
-    position_unique,
-    userteamExist
+    userteamExist,
+    position_id
 } from '../middlewares/validations/teams-validations';
 import validateError from '../middlewares/validations/error-handler';
 import { verifyToken, checkRole } from '../middlewares/session';
@@ -106,7 +106,7 @@ router.put('/selectposition/:userteam_id',
     [
         verifyToken,
         checkRole(['Jugador']),
-        position_unique,
+        position_id,
         userteamExist,
         validateError
     ],

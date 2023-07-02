@@ -33,7 +33,7 @@ export const getAll = async (req: Request, res: Response) => {
                     attributes: [],
                     where: 
                     {
-                        id: req.user.id
+                        ...(friendrequeststatus_id && { id: req.user.id }), 
                     }
                 },
                 {

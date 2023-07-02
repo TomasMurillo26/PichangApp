@@ -168,8 +168,6 @@ export const post = async (req: Request, res: Response) => {
             //userteam_id
         } = req.body as UserGame;
 
-        console.log('NO ENTRES', game_id);
-
         const element = await UserGame.create({
             game_id,
             //userteam_id

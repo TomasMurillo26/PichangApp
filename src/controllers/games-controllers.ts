@@ -214,24 +214,27 @@ export const post = async (req: Request, res: Response) => {
             ground_id,
             gametype_id,
         } = req.body as Game;
+
+        let element;
         
-        const element = await Game.create({
-            start_hour,
-            end_hour,
-            date,
-            num_players,
-            sport_id,
-            ground_id,
-            gametype_id,
-            gamestatus_id: 1,
-            createduser_id: req.user.id
-        }, 
-        { transaction }
-        );
+        if(gametype_id === 2){
+            //Si el partido es informal
+            element = await Game.create({
+                start_hour,
+                end_hour,
+                date,
+                num_players,
+                sport_id,
+                ground_id,
+                gametype_id,
+                gamestatus_id: 1,
+                createduser_id: req.user.id
+            }, 
+            { transaction }
+            );
+    
+            if(!element) throw new Error('No se pudo crear el partido');
 
-        if(!element) throw new Error('No se pudo crear el partido');
-
-        if(element.gametype_id === 2){
             //Si el partido es informal, te unes normalmente al partido.
             const userGame = await UserGame.create({
                 game_id: element.id,
@@ -242,6 +245,29 @@ export const post = async (req: Request, res: Response) => {
     
             if(!userGame) throw new Error('Error al unirse al partido');
         }else{
+            //Si el partido es formal
+            let sport = await Sport.findByPk(sport_id);
+
+            if (!sport) throw new Error('No existe este amigo');
+
+            const max_players = sport.max_players * 2;
+
+            element = await Game.create({
+                start_hour,
+                end_hour,
+                date,
+                num_players: max_players,
+                sport_id,
+                ground_id,
+                gametype_id,
+                gamestatus_id: 1,
+                createduser_id: req.user.id
+            }, 
+            { transaction }
+            );
+    
+            if(!element) throw new Error('No se pudo crear el partido');
+
             //Busca el equipo según el deporte e ID del capitan
             const team = await Team.findOne({
                 where: {
@@ -269,7 +295,7 @@ export const post = async (req: Request, res: Response) => {
 
             /*Si el número de jugadores del equipo es menor que
             el número de jugadores del juego, retorna un 401*/
-            if (userteams < element.num_players){
+            if (userteams < sport.max_players){
                 await transaction.rollback();
 
                 return res.status(401).json({
@@ -285,11 +311,11 @@ export const post = async (req: Request, res: Response) => {
 
             completeTeam = JSON.parse(JSON.stringify(completeTeam));
 
-            for(const element of completeTeam){
+            for(const i of completeTeam){
                 const userGame = await UserGame.create({
                     game_id: element.id,
-                    user_id: element.user_id,
-                    userteam_id: element.id
+                    user_id: i.user_id,
+                    userteam_id: i.id
                 }, 
                 { transaction }
                 );
@@ -390,7 +416,7 @@ export const enterGame = async (req: Request, res: Response) => {
         }
 
         //Según el tipo de juego (formal/informal) varía el comportamiento
-        if(game.gametype_id === 1){
+        if(game.gametype_id === 1){ //Si es formal...
             //Busca el equipo según el deporte e ID del capitan
             const team = await Team.findOne({
                 where: {
@@ -401,6 +427,10 @@ export const enterGame = async (req: Request, res: Response) => {
                     ]
                 }
             });
+
+            let sport = await Sport.findByPk(game.sport_id);
+
+            if(!sport) throw new Error('No se encontró el deporte');
 
             //Si el usuario no es capitán retorna un 401
             if (!team){
@@ -419,7 +449,7 @@ export const enterGame = async (req: Request, res: Response) => {
 
             /*Si el número de jugadores del equipo es menor que
             el número de jugadores del juego, retorna un 401*/
-            if (userteams < game.num_players){
+            if (userteams < sport.max_players){
                 await transaction.rollback();
 
                 return res.status(401).json({
@@ -437,7 +467,7 @@ export const enterGame = async (req: Request, res: Response) => {
 
             for(const element of completeTeam){
                 const userGame = await UserGame.create({
-                    game_id: element.id,
+                    game_id: id,
                     user_id: element.user_id,
                     userteam_id: element.id
                 }, 
@@ -462,18 +492,43 @@ export const enterGame = async (req: Request, res: Response) => {
         el número de jugadores del partido son el mismo
         el partido cambia de estado a "EN PROCESO" y no debiese dejar
         unirse a más personas.*/
-        const count = await UserGame.count({
-            where: {game_id: id}
-        });
 
-        if(count === game.num_players ){
-            const success = await game.update(
-                {
-                    gamestatus_id: 2
-                }, 
-            { transaction });
+        if(game.gametype_id === 1){
+            let count = await UserGame.count({
+                where: {game_id: id}
+            });
     
-            if(!success) throw new Error('No se pudo actualizar el partido');
+            /*Se suma la mitad del número de jugador de un partido
+            para tener en consideración al número de jugadores del otro equipo
+            que acaba de entrar al partido */
+            const contador = count + (game.num_players/2);
+    
+            if(contador === game.num_players ){
+                const success = await game.update(
+                    {
+                        gamestatus_id: 2
+                    }, 
+                { transaction });
+        
+                if(!success) throw new Error('No se pudo actualizar el partido');
+            }
+        }else{
+            let count = await UserGame.count({
+                where: {game_id: id}
+            });
+    
+            /*Se suma 1 al contador para considerar al jugador que recien entró al partido */
+            const contador = count + 1;
+    
+            if(contador === game.num_players ){
+                const success = await game.update(
+                    {
+                        gamestatus_id: 2
+                    }, 
+                { transaction });
+        
+                if(!success) throw new Error('No se pudo actualizar el partido');
+            }
         }
 
         await transaction.commit();
@@ -524,7 +579,7 @@ export const leaveGame = async (req: Request, res: Response) => {
             });
         }
 
-        if(game.gametype_id === 1){
+        if(game.gametype_id === 1){ //Si es formal
              //Busca el equipo según el deporte e ID del capitan
             const team = await Team.findOne({
                 where: {
@@ -569,6 +624,7 @@ export const leaveGame = async (req: Request, res: Response) => {
             }
 
         }else{
+            //Si es informal
             //Se busca al jugador por su ID y el ID del partido
             const userGame = await UserGame.findOne({
                 where: { [Op.and]: [
@@ -621,6 +677,177 @@ export const leaveGame = async (req: Request, res: Response) => {
             status: 200,
             data: [],
             message: 'Abandonaste el partido con éxito'
+        })
+    }catch (error){
+        console.log(error);
+
+        await transaction.rollback();
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error general',
+        });
+    }
+}
+
+export const getUserGame = async (req: Request, res: Response) => {
+    try{
+        const { 
+            gametype_id, 
+        } = req.query;
+
+        let usergame = await UserGame.findOne({
+            attributes: { exclude: ['updatedAt', 'createdAt', 
+            'position_id', 'team_id'] },
+            include: 
+            [
+                {
+                    model: Game,
+                    attributes: { exclude: ['updatedAt', 'createdAt', 
+                    'start_hour', 'end_hour', 'latitude', 'longitude', 
+                    'sport_id', 'gametype_id', 'crerateduser_id', 
+                    'gamestatus_id', 'ground_id']},
+                    include: 
+                    [
+                        {
+                            model: GameType,
+                            attributes: { exclude: ['updatedAt', 'createdAt']},
+                            where: {
+                                ...(gametype_id &&{id: gametype_id})
+                            }
+                        }
+                    ], required: true
+                },
+            ],
+            where: { user_id: req.user.id }
+        });
+
+        if(!usergame){
+            return res.status(404).json({
+                status: 404,
+                data: [],
+                message: 'Jugador sin partido'
+            })
+        }
+
+        const element = await Game.findOne({
+            attributes: { exclude: ['updatedAt', 'createdAt',
+            'sport_id', 'ground_id', 'gametype_id', 'createduser_id',
+            'gamestatus_id'] },
+            include: 
+            [
+                {
+                    model: Sport,
+                    attributes: { exclude: ['updatedAt', 'createdAt',
+                    'max_players', 'min_players', 'activated']},
+                },
+                {
+                    model: GameStatus,
+                    attributes: { exclude: ['updatedAt', 'createdAt']},
+                    where: { 
+                        [Op.or]: [{ id: 1 }, { id: 2 }],  
+                    }
+                },
+                {
+                    model: GameType,
+                    attributes: { exclude: ['updatedAt', 'createdAt']},
+                },
+                {
+                    model: User,
+                    attributes: { exclude: ['updatedAt', 'createdAt',
+                    'password', 'email', 'birthday', 'activated',
+                    'profile_image']},
+                },
+                {
+                    model: Ground,
+                    attributes: { exclude: ['updatedAt', 'createdAt',
+                    'groundtype_id',
+                    'commune_id']},
+                    include: 
+                    [
+                        {
+                            model: Commune,
+                            attributes: { exclude: ['updatedAt', 'createdAt', 
+                            'region_id']},
+                            include:
+                            [
+                                {
+                                    model: Region,
+                                    attributes: { exclude: ['updatedAt', 'createdAt']},
+                                }
+                            ]
+                        },
+                        {
+                            model: GroundType,
+                            attributes: { exclude: ['updatedAt', 'createdAt']},
+                        }
+                    ]
+                },
+                {
+                    model: UserGame,
+                    attributes: { exclude: ['updatedAt', 'createdAt', 'game_id', 'user_id']},
+                    include: 
+                    [
+                        {
+                            model: User,
+                            attributes: { exclude: ['updatedAt', 'createdAt',
+                            'password', 'email', 'birthday', 'activated',
+                            'profile_image']},
+                        }
+                    ]
+                }
+            ],
+            where: { id: usergame.game_id }
+        });
+
+        if(element){
+            return res.json({
+                status: 200,
+                data: element,
+                message: 'Get one game'
+            });
+        }
+        
+        return res.status(404).json({
+            status: 404,
+            data: [],
+            message: 'Jugador sin partido'
+        })
+    }catch (error){
+
+        return res.status(500).json({
+            status: 500,
+            data: {},
+            message: 'Error general',
+        });
+    }
+}
+
+export const finishGame = async (req: Request, res: Response) => {
+    const transaction = await db.transaction();
+    try{
+        const { id } = req.params;
+
+        const game = await Game.findByPk(id);
+        
+        if (!game) throw new Error('No existe este partido');
+
+        /*Se actualiza el estado del partido a terminado */
+        
+        const success = await game.update(
+            {
+                gamestatus_id: 3
+            }, 
+        { transaction });
+
+        if(!success) throw new Error('No se pudo finalizar el partido');
+
+        await transaction.commit();
+
+        return res.json({
+            status: 200,
+            data: [],
+            message: 'Partido terminado con éxito'
         })
     }catch (error){
         console.log(error);

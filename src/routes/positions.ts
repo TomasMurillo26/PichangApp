@@ -5,7 +5,7 @@ import {
     sport_id,
     name_unique
 } from '../middlewares/validations/positions-validations';
-import { getAll, getOne, post, put } from "../controllers/positions-controllers";
+import { getAll, getOne, post, put, toggleActivated } from "../controllers/positions-controllers";
 import validateError from '../middlewares/validations/error-handler';
 import { verifyToken, checkRole } from '../middlewares/session';
 
@@ -52,6 +52,18 @@ router.put(
         validateError
     ],
     put
+);
+
+router.put(
+    '/toggle/:id',
+    [
+        verifyToken,
+        checkRole(['Super Administrador']),
+        // Validaciones
+        positionExist,
+        validateError
+    ], 
+    toggleActivated
 );
 
 export default router;

@@ -1,6 +1,6 @@
 import Validations from './base-validations';
 import { buildCheckFunction } from 'express-validator';
-// import { Op } from 'sequelize';
+import { Op } from 'sequelize';
 import moment from 'moment';
 
 import Sport from '../../models/sports-model';
@@ -21,20 +21,69 @@ const address = Validations.string('address', 'Este campo es requerido', true)
 const num_players = Validations.isPositiveNumeric(
     'num_players', 
     'Es requerido un número de jugadores',
-    true
+    false
 ).custom(async(value: number, {req}) => {
-    const { sport_id } = req.body;
-
+    const { sport_id, gametype_id } = req.body;
     const sport = await Sport.findByPk(sport_id);
 
     if(!sport) throw new Error(`No existe este deporte`);
 
-    if(value < sport.min_players) throw new Error(`La cantidad de jugadores debe ser mayor que ${sport.min_players}`);
+    if(gametype_id === 2){
+        if(value < sport.min_players) throw new Error(`La cantidad de jugadores debe ser mayor que ${sport.min_players}`);
 
-    if(value > sport.max_players) throw new Error(`La cantidad de jugadores debe ser menor que ${sport.max_players}`);
-
-    return true;
+        if(value > sport.max_players) throw new Error(`La cantidad de jugadores debe ser menor que ${sport.max_players}`);
+    
+        return true;
+    }else{
+        return true;
+    }
 });
+
+//-------------------------------------------------
+const requiredByGametype = async (
+    field: string,
+    value: any,
+    gametype_id: any,
+) => {
+    if (!gametype_id) throw new Error('Es necesario ingresar el tipo de partido primero');
+
+    let body = await GameType.findByPk(gametype_id, {
+        raw: true,
+    });
+
+    if (!body) throw new Error('El tipo de partido no existe');
+
+    const gametype = body.id;
+
+    type RequiredParams = {
+        [key: number]: string[];
+    }
+
+    const requiredParams: RequiredParams = {
+        // Formal
+        1: [],
+        // Informal
+        2: ['num_players'],
+    };
+
+    const required = requiredParams[gametype].includes(field);
+
+    if (!required) return;
+
+    if (required && !value) {
+        throw new Error('Este campo es requerido para este tipo de partido');
+    }
+};
+
+const numplayers_required = paramAndQuery('num_players')
+.custom(async (value, { req }) => requiredByGametype(
+'num_players',
+value,
+req.body.gametype_id,
+));
+
+
+//-------------------------------------------------
 
 const latitude = Validations.isNumeric('latitude', 'Es necesaria la latitud', true);
 const longitude = Validations.isNumeric('longitude', 'Es necesaria la longitud', true);
@@ -103,7 +152,10 @@ const gametype_id = Validations.relationExist(
 const createduser_id = paramAndQuery('createduser_id')
     .custom(async (value: number, { req }) => {
         const game = await Game.findOne({
-            where: { createduser_id: req.user.id }
+            where: { 
+                [Op.and]: [{ createduser_id: req.user.id },
+                { [Op.or]: [{ gamestatus_id: 2 }, { gamestatus_id: 1 }]}],
+            }
         });
         if (game && !value) {
             throw new Error('Ya tienes un partido creado');
@@ -124,7 +176,8 @@ export {
     ground_id,
     gametype_id,
     address,
-    createduser_id
+    createduser_id,
+    numplayers_required
 }
 
 

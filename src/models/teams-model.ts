@@ -9,6 +9,7 @@ interface Team extends Model {
     activated: boolean,
     sport_id: number,
     captain_id: number,
+    full: boolean,
     associations: {
         sports: Association<Sport, Team>;
         users: Association<User, Team>;

@@ -71,19 +71,7 @@ const position_id = Validations.relationExist(
     'Es requerida una posición',
     true,
     Position
-    ).bail()
-    .custom(async (value: number, { req }) => {
-        const userteam_id  = req.body?.userteam_id;
-
-        const positionExist = await UserTeam.findOne({
-            where: {[Op.and]:[
-                {id: userteam_id},
-                {position_id: value}]
-            }
-        })
-
-        if (positionExist) throw new Error("Un jugador del equipo tiene ocupada esta posición");
-    });
+);
 
 const position_unique = Validations.relationExist(
     'position_id', 
@@ -93,6 +81,7 @@ const position_unique = Validations.relationExist(
     ).bail()
     .custom(async (value: number, { req }) => {
         const userteam_id  = req.params?.userteam_id;
+        console.log(userteam_id);
         const item = await UserTeam.findOne({
             where: {
                 ...(userteam_id && { id: { [Op.ne]: userteam_id } }),
