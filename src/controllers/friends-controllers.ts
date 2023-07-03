@@ -12,13 +12,10 @@ export const getAll = async (req: Request, res: Response) => {
         const { activated, friendrequeststatus_id } = req.query;
 
         let users = await Friend.findAll({
-            attributes: { exclude: ['updatedAt', 'createdAt',
-            'user_id', 'friend_id', 'friendrequest_id'],
+            attributes: { exclude: ['updatedAt', 'createdAt', 'friendrequest_id'],
             include: [
                 [Sequelize.literal('friends.name'), 'name'],
                 [Sequelize.literal('friends.nickname'), 'nickname'],
-                [Sequelize.literal('users.id'), 'user_id'],
-                [Sequelize.literal('friends.id'), 'friend_id'],
             ] 
         },
             include: 
@@ -105,6 +102,8 @@ export const getAll = async (req: Request, res: Response) => {
         });
 
         let elementList = users.concat(friends);
+
+        console.log(elementList);
 
         return elementList.length > 0
         ? res.json({
