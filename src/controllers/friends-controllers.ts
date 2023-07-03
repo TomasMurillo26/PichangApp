@@ -56,6 +56,8 @@ export const getAll = async (req: Request, res: Response) => {
             },        
         });
 
+        users = users.filter((i) => req.user.id === i.user_id);
+
         let friends = await Friend.findAll({
             attributes: { exclude: ['updatedAt', 'createdAt',
             'user_id', 'friend_id', 'friendrequest_id'],
