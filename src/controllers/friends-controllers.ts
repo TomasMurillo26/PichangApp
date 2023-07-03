@@ -61,7 +61,6 @@ export const getAll = async (req: Request, res: Response) => {
 
         users = JSON.parse(JSON.stringify(users));
 
-        console.log('ID ',req.user.id);
         for(const i of users){
             if(req.user.id !== i.user_id){
                 users = [];
@@ -108,8 +107,6 @@ export const getAll = async (req: Request, res: Response) => {
         });
 
         let elementList = users.concat(friends);
-
-        console.log(elementList);
 
         return elementList.length > 0
         ? res.json({
