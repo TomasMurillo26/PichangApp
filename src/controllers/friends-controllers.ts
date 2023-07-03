@@ -18,7 +18,7 @@ export const getAll = async (req: Request, res: Response) => {
                 [Sequelize.literal('friends.name'), 'name'],
                 [Sequelize.literal('friends.nickname'), 'nickname'],
                 [Sequelize.literal('users.id'), 'user_id'],
-                [Sequelize.literal('friends.id'), 'friend_id']
+                [Sequelize.literal('friends.id'), 'friend_id'],
             ] 
         },
             include: 
@@ -61,6 +61,7 @@ export const getAll = async (req: Request, res: Response) => {
 
         users = JSON.parse(JSON.stringify(users));
 
+        console.log('ID ',req.user.id);
         for(const i of users){
             if(req.user.id !== i.user_id){
                 users = [];
@@ -73,6 +74,7 @@ export const getAll = async (req: Request, res: Response) => {
             include: [
                 [Sequelize.literal('users.name'), 'name'],
                 [Sequelize.literal('users.nickname'), 'nickname'],
+                [Sequelize.literal('friends.id'), 'user_id'],
                 [Sequelize.literal('users.id'), 'friend_id']
             ] 
         },
@@ -106,6 +108,8 @@ export const getAll = async (req: Request, res: Response) => {
         });
 
         let elementList = users.concat(friends);
+
+        console.log(elementList);
 
         return elementList.length > 0
         ? res.json({
