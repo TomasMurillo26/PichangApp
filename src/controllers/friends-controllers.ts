@@ -59,8 +59,6 @@ export const getAll = async (req: Request, res: Response) => {
             },        
         });
 
-        users = JSON.parse(JSON.stringify(users));
-
         for(const i of users){
             if(req.user.id !== i.user_id){
                 users = [];
