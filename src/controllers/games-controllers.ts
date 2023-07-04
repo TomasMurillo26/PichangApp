@@ -88,6 +88,7 @@ export const getAll = async (req: Request, res: Response) => {
                         }
                     ],...( commune_id && { required: true}),
                     ...( region_id && { required: true}),
+                    ...( groundtype_id && { required: true })
                 },
             ],
             where: {
